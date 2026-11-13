@@ -46,6 +46,10 @@ input[type=search]{font:15px var(--body);color:var(--fg);background:var(--panel)
 .p-hunt{background:var(--good-bg);color:var(--good)}
 .p-recent{background:var(--warn-bg);color:var(--warn)}
 .p-idle{background:var(--idle-bg);color:var(--muted)}
+.on{font-size:11px;font-weight:800;letter-spacing:.06em;padding:3px 8px;border-radius:999px;display:inline-flex;align-items:center;gap:5px}
+.on::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.on-y{background:var(--good-bg);color:var(--good)}
+.on-n{background:var(--idle-bg);color:var(--muted)}
 .meta{font-size:13px;color:var(--muted)}
 .xp{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:4px}
 @media (max-width:420px){.xp{grid-template-columns:repeat(3,minmax(0,1fr))}}
@@ -87,7 +91,7 @@ a:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offs
   </div>
   <div class="list" id="list"><div class="empty"><b>Carregando o radar…</b>Buscando a última coleta.</div></div>
   <footer>
-    <span>"Caçando agora" = ganhou XP no último minuto (o XP de 1, 5 e 15 min é medido minuto a minuto). O site do Olden 74 não mostra a posição de ninguém no mapa: as mortes recentes para monstros indicam onde o char costuma caçar.</span>
+    <span>ONLINE/OFFLINE vem da lista pública de quem está online no olden74.com (atualizada a cada minuto). "Caçando agora" = ganhou XP no último minuto (o XP de 1, 5 e 15 min é medido minuto a minuto). O site do Olden 74 não mostra a posição de ninguém no mapa: as mortes recentes para monstros indicam onde o char costuma caçar.</span>
     <span>Site não oficial, sem ligação com a equipe do Olden 74.</span>
   </footer>
 </div>
@@ -103,6 +107,7 @@ let data=null, live=null, query="";
 $("q").addEventListener("input",e=>{query=e.target.value.trim().toLowerCase();render();});
 function el(tag,cls,text){const e=document.createElement(tag); if(cls)e.className=cls; if(text!=null)e.textContent=text; return e;}
 function lv(c){ return live&&live.chars&&live.chars[c.name]; }
+function isOn(c){ if(!live||!live.online) return null; return live.online.some(n=>n.toLowerCase()===c.name.toLowerCase()); }
 function status(c){
   const g=c.gain||{}, L=lv(c);
   if(L&&L.g1>0) return ["p-hunt","Caçando agora · XP no último minuto",4];
@@ -118,7 +123,10 @@ function card(c){
   const [cls,txt]=status(c);
   const head=el("div","head"), name=el("div","name");
   const a=el("a",null,c.name); a.href="https://olden74.com/personagens/"+encodeURIComponent(c.name); a.target="_blank"; a.rel="noopener";
-  name.append(a, el("span","pill "+cls,txt));
+  const on=isOn(c);
+  name.append(a);
+  if(on!==null) name.append(el("span","on "+(on?"on-y":"on-n"),on?"ONLINE":"OFFLINE"));
+  name.append(el("span","pill "+cls,txt));
   const meta=el("div","meta",`Level ${c.level} · ${VOC[c.voc]||""} · mora em ${c.town}${c.guild?" · "+c.guild:""}${c.lastlogin?" · último login "+dm(c.lastlogin):""}`);
   const xp=el("div","xp");
   const L=lv(c);
@@ -157,7 +165,7 @@ function card(c){
 function render(){
   if(!data) return;
   $("upd").textContent=(live&&live.updated?"Ao vivo: "+hhmm(live.updated)+" · ":"")+"Coleta geral: "+hhmm(data.updated)+" · "+data.chars.length+" personagens";
-  const list=data.chars.filter(c=>!query||c.name.toLowerCase().includes(query)).sort((a,b)=>{const sa=a.missing||a.error?-1:status(a)[2], sb=b.missing||b.error?-1:status(b)[2]; return sb-sa||((b.gain&&b.gain["60"])||0)-((a.gain&&a.gain["60"])||0);});
+  const list=data.chars.filter(c=>!query||c.name.toLowerCase().includes(query)).sort((a,b)=>{const sa=a.missing||a.error?-1:status(a)[2], sb=b.missing||b.error?-1:status(b)[2]; return ((isOn(b)?1:0)-(isOn(a)?1:0))||sb-sa||((b.gain&&b.gain["60"])||0)-((a.gain&&a.gain["60"])||0);});
   const box=$("list"); box.replaceChildren();
   if(!list.length){const e=el("div","empty"); e.append(el("b",null,query?"Ninguém com esse nome no radar":"Radar vazio"), document.createTextNode(query?"Confira o nome digitado.":"Nenhum personagem na lista do radar ainda.")); box.append(e); return;}
   for(const c of list) box.append(card(c));
