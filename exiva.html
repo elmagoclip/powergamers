@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mapa do Exiva · Olden 74</title>
+<meta name="description" content="Cole o resultado do exiva e veja no mapa onde o personagem pode estar. Por twitch.tv/elmago21.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: painel de leituras à esquerda (empilha no celular), mapa grande à direita com a área possível pintada */
+:root{
+  --bg:#f3f1ec; --panel:#ffffff; --fg:#1d1a16; --muted:#6f685d; --line:#e2ddd2;
+  --accent:#b8860b; --accent-ink:#ffffff; --hit:#ff00c8; --me:#2f6fe0; --good:#2f7d4a; --warn:#9a6a00; --warn-bg:#fbf0d3; --twitch:#9146ff;
+  --display:"Space Grotesk",system-ui,sans-serif; --body:"Inter",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#14120f; --panel:#1d1a16; --fg:#efe9dd; --muted:#a39a8a; --line:#2f2a23;
+  --accent:#e0b23a; --accent-ink:#1a1408; --good:#6cc48a; --warn:#e3b54a; --warn-bg:#352a10; color-scheme:dark}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45}
+.wrap{max-width:1200px;margin:0 auto;padding-block:28px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:18px}
+nav{display:flex;flex-wrap:wrap;gap:8px}
+nav a{font-weight:600;font-size:14px;color:var(--fg);text-decoration:none;padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:var(--panel)}
+nav a[aria-current="page"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--display);font-size:clamp(28px,5vw,40px);line-height:1.05;margin:4px 0 0}
+.lead{color:var(--muted);max-width:70ch;margin:6px 0 0}
+.by{display:inline-flex;margin-top:8px;font-size:13px;font-weight:600;color:#fff;background:var(--twitch);padding:4px 10px;border-radius:999px;text-decoration:none}
+.grid{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.panel h2{font-family:var(--display);font-size:17px;margin:0}
+.step{font-size:13px;color:var(--muted)}
+.step b{color:var(--fg)}
+textarea,input[type=text]{font:14px var(--body);color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+textarea{min-height:64px;resize:vertical;font-family:var(--mono);font-size:13px}
+.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+button{font:600 13px var(--body);border:1px solid var(--line);background:var(--bg);color:var(--fg);padding:7px 11px;border-radius:7px;cursor:pointer}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,textarea:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+select{font:14px var(--body);color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:6px 8px}
+.pos{font-family:var(--mono);font-size:13px}
+.readings{display:flex;flex-direction:column;gap:6px}
+.reading{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:8px;align-items:start;background:var(--bg);border-radius:8px;padding:8px;font-size:13px}
+.reading .n{width:22px;height:22px;border-radius:50%;background:var(--me);color:#fff;display:grid;place-items:center;font-weight:700;font-size:12px}
+.reading .t{overflow-wrap:anywhere}
+.reading .t small{display:block;color:var(--muted);font-family:var(--mono);font-size:11px}
+.reading button{padding:3px 8px}
+.msg{font-size:13px;border-radius:8px;padding:8px 10px;background:var(--warn-bg);color:var(--warn)}
+.msg.ok{background:color-mix(in srgb,var(--good) 15%,transparent);color:var(--good)}
+.mapbox{position:relative;background:#000;border:1px solid var(--line);border-radius:12px;overflow:hidden;height:min(72vh,720px);min-height:380px;touch-action:none}
+canvas{display:block;width:100%;height:100%;cursor:crosshair}
+.mapui{position:absolute;top:10px;right:10px;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.mapui select{background:rgba(20,18,15,.85);color:#fff;border-color:rgba(255,255,255,.2)}
+.mapui button{background:rgba(20,18,15,.85);color:#fff;border-color:rgba(255,255,255,.2);min-width:36px}
+.hud{position:absolute;left:10px;bottom:10px;background:rgba(20,18,15,.85);color:#fff;font-family:var(--mono);font-size:12px;padding:5px 8px;border-radius:6px;pointer-events:none}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--muted)}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px;background:var(--c)}
+footer{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:6px}
+footer a{color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav aria-label="Páginas"><a href="./">Quem mais fez XP</a><a href="radar.html">Radar de hunteds</a><a href="mortes.html">Últimas mortes</a><a href="exiva.html" aria-current="page">Mapa do exiva</a></nav>
+  <header>
+    <div class="eyebrow">Olden 74 · 7.4 · 1x PvP</div>
+    <h1>Mapa do exiva</h1>
+    <p class="lead">Marque onde você está, cole a mensagem do exiva e o mapa pinta onde o personagem pode estar. Com dois ou mais exivas de lugares diferentes, a área fica bem menor.</p>
+    <a class="by" href="https://www.twitch.tv/elmago21" target="_blank" rel="noopener">twitch.tv/elmago21</a>
+  </header>
+
+  <div class="grid">
+    <section class="panel" aria-label="Leituras do exiva">
+      <h2>1. Onde você está</h2>
+      <div class="step">Clique no mapa no ponto onde você soltou o exiva, ou escolha uma cidade.</div>
+      <div class="row">
+        <select id="town" aria-label="Cidade">
+          <option value="">Cidade…</option>
+        </select>
+        <span class="pos" id="mypos">Nenhum ponto marcado</span>
+      </div>
+
+      <h2>2. Cole o exiva</h2>
+      <textarea id="txt" placeholder="Ex.: Fat Joe is far to the north-east."></textarea>
+      <div class="row">
+        <button class="primary" id="add" type="button">Mostrar no mapa</button>
+        <button id="clear" type="button">Limpar tudo</button>
+      </div>
+      <div id="msg" class="msg" hidden></div>
+
+      <h2>Leituras</h2>
+      <div class="readings" id="readings"><div class="step">Nenhuma leitura ainda.</div></div>
+      <div class="legend"><span style="--c:var(--me)">Onde você estava</span><span style="--c:var(--hit)">Onde ele pode estar (o resto do mapa escurece)</span></div>
+    </section>
+
+    <section aria-label="Mapa">
+      <div class="mapbox" id="mapbox">
+        <canvas id="map" aria-label="Mapa de Tibia com a área possível do exiva"></canvas>
+        <div class="mapui">
+          <button type="button" id="zin" aria-label="Aproximar">+</button>
+          <button type="button" id="zout" aria-label="Afastar">−</button>
+          <button type="button" id="fit" aria-label="Centralizar na área">◎</button>
+          <select id="floor" aria-label="Andar do mapa"></select>
+        </div>
+        <div class="hud" id="hud">Carregando o mapa…</div>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <span>Regras do exiva (7.4): "next to you" até 4 sqm · "to the" 5 a 100 sqm · "far to the" 101 a 249 sqm · "very far" 250 sqm ou mais. A direção segue a regra do jogo (diagonal entre os ângulos de ~22,5° e ~67,5°).</span>
+    <span>Mapa: <a href="https://tibiamaps.io" target="_blank" rel="noopener">tibiamaps.io</a> (mapa atual de Tibia; o continente principal é o mesmo do 7.4, mas áreas novas não existem no Olden 74). Site não oficial, sem ligação com a equipe do Olden 74.</span>
+  </footer>
+</div>
+<script>
+const MAP={x0:31744,y0:30976,w:2560,h:2048};
+const IMG=f=>`https://tibiamaps.github.io/tibia-map-data/floor-${String(f).padStart(2,"0")}-map.png`;
+const TOWNS=[["Thais",32369,32241],["Carlin",32360,31782],["Venore",32953,32077],["Ab'Dendriel",32732,31634],["Kazordoon",32649,31925],["Edron",33210,31814],["Darashia",33213,32454],["Ankrahmun",33194,32853],["Port Hope",32595,32746],["Rookgaard",32097,32219]];
+const DIRS=[["north-east","NE"],["northeast","NE"],["north-west","NW"],["northwest","NW"],["south-east","SE"],["southeast","SE"],["south-west","SW"],["southwest","SW"],["nordeste","NE"],["noroeste","NW"],["sudeste","SE"],["sudoeste","SW"],["north","N"],["south","S"],["east","E"],["west","W"],["norte","N"],["sul","S"],["leste","E"],["oeste","W"]];
+const DIRPT={N:"norte",S:"sul",E:"leste",W:"oeste",NE:"nordeste",NW:"noroeste",SE:"sudeste",SW:"sudoeste"};
+const BANDS=[[0,4,"até 4 sqm"],[5,100,"5 a 100 sqm"],[101,249,"101 a 249 sqm"],[250,1e9,"250 sqm ou mais"]];
+const $=id=>document.getElementById(id);
+const cv=$("map"), ctx=cv.getContext("2d");
+let img=new Image(), imgOk=false, floor=7;
+let view={s:0.5,cx:32369,cy:32241};
+let me=null, readings=[], mask=null;
+
+for(const [n] of TOWNS){const o=document.createElement("option");o.value=n;o.textContent=n;$("town").append(o);}
+for(let f=0;f<=15;f++){const o=document.createElement("option");o.value=f;o.textContent="Andar "+f+(f===7?" (térreo)":"");if(f===7)o.selected=true;$("floor").append(o);}
+
+function loadFloor(f){ imgOk=false; $("hud").textContent="Carregando o mapa…"; img=new Image(); img.crossOrigin="anonymous"; img.onload=()=>{imgOk=true;draw();}; img.onerror=()=>{$("hud").textContent="Não consegui carregar o mapa.";}; img.src=IMG(f); }
+$("floor").addEventListener("change",e=>{floor=+e.target.value;loadFloor(floor);});
+
+function size(){const r=cv.getBoundingClientRect(),d=window.devicePixelRatio||1;cv.width=Math.round(r.width*d);cv.height=Math.round(r.height*d);draw();}
+new ResizeObserver(size).observe(cv);
+const toScreen=(x,y)=>{const d=window.devicePixelRatio||1;return [(x-view.cx)*view.s*d+cv.width/2,(y-view.cy)*view.s*d+cv.height/2];};
+const toWorld=(px,py)=>{const d=window.devicePixelRatio||1;return [Math.floor((px*d-cv.width/2)/(view.s*d)+view.cx),Math.floor((py*d-cv.height/2)/(view.s*d)+view.cy)];};
+
+/* ---- regra do exiva ---- */
+function dirOf(dx,dy){const ax=Math.abs(dx),ay=Math.abs(dy); if(ay>2.42*ax) return dy<0?"N":"S"; if(ax>2.42*ay) return dx>0?"E":"W"; return (dy<0?"N":"S")+(dx>0?"E":"W");}
+function parse(t){
+  const s=t.toLowerCase().replace(/\s+/g," ");
+  let band=null;
+  if(/very far|muito longe/.test(s)) band=3;
+  else if(/\bfar\b|\blonge\b/.test(s)) band=2;
+  else if(/next to you|ao (seu )?lado|\babove you\b|\bbelow you\b|acima de voc|abaixo de voc/.test(s)) band=0;
+  else if(/\bto the\b|\bao\b|\ba\b|para o/.test(s)) band=1;
+  let dir=null; for(const [w,d] of DIRS){ if(s.includes(w)){dir=d;break;} }
+  let level=null; if(/higher level|above you|andar (de )?cima|acima/.test(s)) level="acima"; else if(/lower level|below you|andar (de )?baixo|abaixo/.test(s)) level="abaixo";
+  const name=(t.match(/^\s*([^\n]+?)\s+(is|está|esta)\s/i)||[])[1]||"";
+  if(band===null) return null;
+  if(band>0&&!dir) return null;
+  return {band,dir:band===0?null:dir,level,name:name.trim()};
+}
+function allowed(r,x,y){
+  const dx=x-r.x, dy=y-r.y, dist=Math.max(Math.abs(dx),Math.abs(dy)); const [lo,hi]=BANDS[r.band];
+  if(dist<lo||dist>hi) return false;
+  if(r.band===0) return true;
+  return dirOf(dx,dy)===r.dir;
+}
+/* máscara: 1 pixel = 2x2 sqm, interseção de todas as leituras */
+function buildMask(){
+  if(!readings.length){mask=null;return;}
+  const W=MAP.w/2,H=MAP.h/2, c=document.createElement("canvas"); c.width=W;c.height=H;
+  const g=c.getContext("2d"), im=g.createImageData(W,H), d=im.data; let n=0, minx=1e9,miny=1e9,maxx=-1,maxy=-1;
+  for(let j=0;j<H;j++) for(let i=0;i<W;i++){
+    const x=MAP.x0+i*2+1, y=MAP.y0+j*2+1; let ok=true;
+    for(const r of readings){ if(!allowed(r,x,y)){ok=false;break;} }
+    const k=(j*W+i)*4;
+    if(!ok){ d[k]=0;d[k+1]=0;d[k+2]=0;d[k+3]=165; }
+    else { d[k]=255;d[k+1]=0;d[k+2]=200;d[k+3]=70; n++; if(i<minx)minx=i;if(i>maxx)maxx=i;if(j<miny)miny=j;if(j>maxy)maxy=j;}
+  }
+  g.putImageData(im,0,0);
+  mask={c,n,box:n?[MAP.x0+minx*2,MAP.y0+miny*2,MAP.x0+maxx*2+2,MAP.y0+maxy*2+2]:null};
+}
+function draw(){
+  const d=window.devicePixelRatio||1; ctx.setTransform(1,0,0,1,0,0); ctx.fillStyle="#000"; ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.imageSmoothingEnabled=view.s<1;
+  const [ox,oy]=toScreen(MAP.x0,MAP.y0), sc=view.s*d;
+  if(imgOk){ ctx.drawImage(img,ox,oy,MAP.w*sc,MAP.h*sc); $("hud").textContent=`Andar ${floor} · zoom ${view.s>=1?view.s.toFixed(0)+"x":view.s.toFixed(2)+"x"}`; }
+  if(mask){ ctx.imageSmoothingEnabled=false; ctx.drawImage(mask.c,ox,oy,MAP.w*sc,MAP.h*sc);
+    if(mask.box){ const [a,b]=toScreen(mask.box[0],mask.box[1]),[c2,e]=toScreen(mask.box[2],mask.box[3]); ctx.strokeStyle="#ff00c8"; ctx.lineWidth=2*d; ctx.setLineDash([6*d,4*d]); ctx.strokeRect(a,b,c2-a,e-b); ctx.setLineDash([]); } }
+  ctx.font=`600 ${12*d}px Inter, system-ui, sans-serif`; ctx.textAlign="center";
+  for(const [n,x,y] of TOWNS){ const [sx,sy]=toScreen(x,y); if(sx<-50||sy<-20||sx>cv.width+50||sy>cv.height+20) continue; ctx.fillStyle="rgba(0,0,0,.6)"; const w=ctx.measureText(n).width+8*d; ctx.fillRect(sx-w/2,sy-22*d,w,16*d); ctx.fillStyle="#fff"; ctx.fillText(n,sx,sy-10*d); }
+  readings.forEach((r,i)=>pin(r.x,r.y,String(i+1)));
+  if(me) pin(me[0],me[1],"•");
+}
+function pin(x,y,label){ const d=window.devicePixelRatio||1,[sx,sy]=toScreen(x+.5,y+.5); ctx.beginPath(); ctx.arc(sx,sy,9*d,0,Math.PI*2); ctx.fillStyle="#2f6fe0"; ctx.fill(); ctx.lineWidth=2*d; ctx.strokeStyle="#fff"; ctx.stroke(); ctx.fillStyle="#fff"; ctx.font=`700 ${11*d}px Inter, sans-serif`; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText(label,sx,sy+.5); ctx.textBaseline="alphabetic"; }
+function setMe(x,y,label){ me=[x,y]; $("mypos").textContent=(label?label+" · ":"")+`${x}, ${y}`; draw(); }
+function msg(t,ok){ const m=$("msg"); m.hidden=!t; m.textContent=t||""; m.className="msg"+(ok?" ok":""); }
+function renderList(){
+  const box=$("readings"); box.replaceChildren();
+  if(!readings.length){const e=document.createElement("div");e.className="step";e.textContent="Nenhuma leitura ainda.";box.append(e);return;}
+  readings.forEach((r,i)=>{
+    const row=document.createElement("div"); row.className="reading";
+    const n=document.createElement("span"); n.className="n"; n.textContent=i+1;
+    const t=document.createElement("div"); t.className="t";
+    t.textContent=(r.name?r.name+": ":"")+(r.band===0?"bem perto (até 4 sqm)":`${BANDS[r.band][2]} ao ${DIRPT[r.dir]}`)+(r.level?` · andar ${r.level}`:"");
+    const sm=document.createElement("small"); sm.textContent=`de ${r.x}, ${r.y}`; t.append(sm);
+    const b=document.createElement("button"); b.type="button"; b.textContent="Remover"; b.addEventListener("click",()=>{readings.splice(i,1);refresh();});
+    row.append(n,t,b); box.append(row);
+  });
+}
+function fitTo(box){ if(!box) return; const r=cv.getBoundingClientRect(); const w=box[2]-box[0], h=box[3]-box[1]; view.cx=(box[0]+box[2])/2; view.cy=(box[1]+box[3])/2; view.s=Math.max(0.15,Math.min(4,0.8*Math.min(r.width/Math.max(w,20),r.height/Math.max(h,20)))); draw(); }
+function refresh(){ buildMask(); renderList(); draw();
+  if(readings.length){ if(mask&&mask.n){ msg(`Área possível: cerca de ${(mask.n*4).toLocaleString("pt-BR")} sqm. ${readings.length<2?"Solte outro exiva de um lugar diferente para fechar a área.":""}`,true); } else msg("As leituras não batem entre si. Confira se o ponto marcado está certo em cada uma."); }
+  else msg("");
+}
+$("add").addEventListener("click",()=>{
+  const p=parse($("txt").value);
+  if(!me){ msg("Primeiro marque no mapa onde você estava quando soltou o exiva."); return; }
+  if(!p){ msg("Não entendi essa mensagem. Cole o texto do exiva como aparece no jogo, por exemplo: \"Fulano is far to the north-east.\""); return; }
+  readings.push({...p,x:me[0],y:me[1]}); $("txt").value=""; refresh(); if(mask) fitTo(mask.box);
+});
+$("clear").addEventListener("click",()=>{readings=[];me=null;$("mypos").textContent="Nenhum ponto marcado";refresh();});
+$("town").addEventListener("change",e=>{const t=TOWNS.find(x=>x[0]===e.target.value); if(t){setMe(t[1],t[2],t[0]); view.cx=t[1];view.cy=t[2];view.s=Math.max(view.s,1);draw();}});
+$("zin").addEventListener("click",()=>{view.s=Math.min(8,view.s*1.5);draw();});
+$("zout").addEventListener("click",()=>{view.s=Math.max(0.12,view.s/1.5);draw();});
+$("fit").addEventListener("click",()=>{ if(mask&&mask.box) fitTo(mask.box); else if(me){view.cx=me[0];view.cy=me[1];draw();} });
+
+/* arrastar para mover, clicar para marcar a posição, roda para zoom */
+let drag=null;
+cv.addEventListener("pointerdown",e=>{cv.setPointerCapture(e.pointerId); drag={x:e.clientX,y:e.clientY,cx:view.cx,cy:view.cy,moved:false};});
+cv.addEventListener("pointermove",e=>{
+  const r=cv.getBoundingClientRect(); const [wx,wy]=toWorld(e.clientX-r.left,e.clientY-r.top);
+  if(imgOk) $("hud").textContent=`Andar ${floor} · ${wx}, ${wy}`;
+  if(!drag) return; const dx=e.clientX-drag.x, dy=e.clientY-drag.y; if(Math.abs(dx)+Math.abs(dy)>4) drag.moved=true;
+  if(drag.moved){ view.cx=drag.cx-dx/view.s; view.cy=drag.cy-dy/view.s; draw(); }
+});
+cv.addEventListener("pointerup",e=>{ if(drag&&!drag.moved){ const r=cv.getBoundingClientRect(); const [x,y]=toWorld(e.clientX-r.left,e.clientY-r.top); $("town").value=""; setMe(x,y); } drag=null; });
+cv.addEventListener("wheel",e=>{e.preventDefault(); const r=cv.getBoundingClientRect(); const [wx,wy]=toWorld(e.clientX-r.left,e.clientY-r.top); const f=e.deltaY<0?1.25:0.8; const ns=Math.max(0.12,Math.min(8,view.s*f)); view.cx=wx-(wx-view.cx)*view.s/ns; view.cy=wy-(wy-view.cy)*view.s/ns; view.s=ns; draw();},{passive:false});
+
+loadFloor(floor); refresh();
+</script>
+</body>
+</html>
