@@ -112,11 +112,12 @@ function fragsOf(c){ if(!liveD) return c.frags; const n=c.name.toLowerCase(); co
 $("q").addEventListener("input",e=>{query=e.target.value.trim().toLowerCase();render();});
 function el(tag,cls,text){const e=document.createElement(tag); if(cls)e.className=cls; if(text!=null)e.textContent=text; return e;}
 function lv(c){ return live&&live.chars&&live.chars[c.name]; }
-function isOn(c){ if(!live||!live.online) return null; return live.online.some(n=>n.toLowerCase()===c.name.toLowerCase()); }
+function isOn(c){ if(!live||!live.online||!live.onlineAt||Date.now()-live.onlineAt>5*60000) return null; return live.online.some(n=>n.toLowerCase()===c.name.toLowerCase()); }
 function status(c){
   const g=c.gain||{}, L=lv(c);
   if(L&&L.g1>0) return ["p-hunt","Caçando agora · XP no último minuto",4];
   if(L&&L.g5>0) return ["p-hunt","Caçou nos últimos 5 min",3];
+  if(isOn(c)===false){ const dd=deathsOf(c)[0]; if(dd&&c.lastlogin&&dd.t>=c.lastlogin) return ["p-idle","Saiu · morreu "+ago(dd.t),0]; return ["p-idle","Offline",0]; }
   if(g["10"]>0) return ["p-hunt","Caçando agora",3];
   if(g["30"]>0) return ["p-recent","Ganhou XP nos últimos 30 min",2];
   if(c.lastlogin && Date.now()-c.lastlogin<90*60000) return ["p-recent","Logou "+ago(c.lastlogin),1];
