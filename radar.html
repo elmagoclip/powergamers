@@ -103,7 +103,12 @@ const hhmm=t=>new Date(t).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-d
 const dm=t=>new Date(t).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
 function ago(t){const m=Math.max(0,Math.round((Date.now()-t)/60000)); if(m<60)return `há ${m} min`; const h=Math.round(m/60); if(h<48)return `há ${h}h`; return `há ${Math.round(h/24)} dias`;}
 const LIVE="https://quiet-sea-5869.saviocardoso76-79e.workers.dev/";
-let data=null, live=null, query="";
+const LIVE_D=LIVE+"mortes";
+let data=null, live=null, liveD=null, query="";
+// junta as mortes/frags da coleta geral com as mortes ao vivo do server (sem repetir)
+function mergeT(a,b){const seen=new Set(), out=[]; for(const x of [...a,...b]){const k=x.t+"|"+(x.who||x.by); if(seen.has(k)) continue; seen.add(k); out.push(x);} return out.sort((x,y)=>y.t-x.t);}
+function deathsOf(c){ if(!liveD) return c.deaths; const n=c.name.toLowerCase(); return mergeT(liveD.filter(d=>d.name.toLowerCase()===n).map(d=>({t:d.t,lvl:d.lvl,by:d.by,p:d.p,md:d.md,mdp:d.mdp})), c.deaths); }
+function fragsOf(c){ if(!liveD) return c.frags; const n=c.name.toLowerCase(); const f=[]; for(const d of liveD){ const last=d.p&&d.by.toLowerCase()===n, as=d.mdp&&d.md&&d.md.toLowerCase()===n; if(last||as) f.push({t:d.t,who:d.name,lvl:d.lvl,unj:!!(d.unj||d.mdunj),last}); } return mergeT(f, c.frags); }
 $("q").addEventListener("input",e=>{query=e.target.value.trim().toLowerCase();render();});
 function el(tag,cls,text){const e=document.createElement(tag); if(cls)e.className=cls; if(text!=null)e.textContent=text; return e;}
 function lv(c){ return live&&live.chars&&live.chars[c.name]; }
@@ -145,8 +150,8 @@ function card(c){
   const side=el("div","side");
   side.append(el("h3",null,"Últimas mortes"));
   const ul=el("ul");
-  if(!c.deaths.length) ul.append(el("li",null,"Nenhuma morte registrada."));
-  for(const d of c.deaths.slice(0,3)){
+  const DD=deathsOf(c); if(!DD.length) ul.append(el("li",null,"Nenhuma morte registrada."));
+  for(const d of DD.slice(0,3)){
     const li=el("li"); const tm=el("time",null,ago(d.t)); tm.dateTime=new Date(d.t).toISOString(); li.append(tm);
     li.append(document.createTextNode(`lvl ${d.lvl} por `)); li.append(el("span",d.p?"pl":"mon",d.by));
     if(d.md&&d.md!==d.by){li.append(document.createTextNode(" e ")); li.append(el("span",d.mdp?"pl":"mon",d.md));}
@@ -155,8 +160,8 @@ function card(c){
   side.append(ul);
   side.append(el("h3",null,"Frags recentes"));
   const uf=el("ul");
-  if(!c.frags.length) uf.append(el("li",null,"Nenhum frag registrado."));
-  for(const f of c.frags.slice(0,3)){
+  const FF=fragsOf(c); if(!FF.length) uf.append(el("li",null,"Nenhum frag registrado."));
+  for(const f of FF.slice(0,3)){
     const li=el("li"); li.append(el("time",null,ago(f.t))); li.append(document.createTextNode(`${f.last?"matou":"ajudou a matar"} `)); li.append(el("span","pl",f.who)); li.append(document.createTextNode(` (lvl ${f.lvl})${f.unj?" · injustificada":""}`)); uf.append(li);
   }
   side.append(uf);
@@ -177,7 +182,10 @@ async function load(){
 async function loadLive(){
   try{ const r=await fetch(LIVE,{cache:"no-store"}); if(!r.ok) throw 0; live=await r.json(); render(); }catch(e){}
 }
-load(); loadLive(); setInterval(load,120000); setInterval(loadLive,30000);
+async function loadDeaths(){
+  try{ const r=await fetch(LIVE_D,{cache:"no-store"}); if(!r.ok) throw 0; const j=await r.json(); if(j.deaths){ liveD=j.deaths; render(); } }catch(e){}
+}
+load(); loadLive(); loadDeaths(); setInterval(load,120000); setInterval(loadLive,30000); setInterval(loadDeaths,30000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden){load();loadLive();}});
 </script>
 </body>
