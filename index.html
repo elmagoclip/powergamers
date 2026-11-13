@@ -59,6 +59,9 @@ td a:hover{text-decoration:underline}
 tr.me td{background:var(--me)}
 .empty{padding:40px 20px;text-align:center;color:var(--muted)}
 .empty b{color:var(--fg);display:block;font-family:var(--display);font-size:20px;margin-bottom:6px}
+nav{display:flex;flex-wrap:wrap;gap:8px}
+nav a{font-weight:600;font-size:14px;color:var(--fg);text-decoration:none;padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:var(--panel)}
+nav a[aria-current="page"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 footer{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:6px}
 footer a{color:var(--muted)}
 @media (prefers-reduced-motion:no-preference){.tabs button{transition:background .15s}}
@@ -66,6 +69,7 @@ footer a{color:var(--muted)}
 </head>
 <body>
 <div class="wrap">
+  <nav aria-label="Páginas"><a href="./" aria-current="page">Quem mais fez XP</a><a href="radar.html">Radar de hunteds</a></nav>
   <header>
     <div>
       <div class="eyebrow">Olden 74 · 7.4 · 1x PvP</div>

@@ -1,0 +1,6 @@
+# Um nome de personagem por linha. Linhas com # são ignoradas.
+Fat Joe
+Lethal Jacto
+Jubileia
+Iagomagz
+Lukao
