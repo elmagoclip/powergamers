@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Quem está online · Olden 74</title>
+<meta name="description" content="Lista de quem está online agora no Olden 74, atualizada a cada minuto. Por twitch.tv/elmago21.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: resumo no topo, filtros, hunteds online primeiro e depois a lista completa por level */
+:root{
+  --bg:#f3f1ec; --panel:#ffffff; --fg:#1d1a16; --muted:#6f685d; --line:#e2ddd2;
+  --accent:#b8860b; --accent-ink:#ffffff; --good:#2f7d4a; --good-bg:#e3f2e7; --warn:#9a6a00; --warn-bg:#fbf0d3;
+  --bad:#b03a2e; --idle-bg:#ece8e0; --twitch:#9146ff;
+  --display:"Space Grotesk",system-ui,sans-serif; --body:"Inter",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#14120f; --panel:#1d1a16; --fg:#efe9dd; --muted:#a39a8a; --line:#2f2a23;
+  --accent:#e0b23a; --accent-ink:#1a1408; --good:#6cc48a; --good-bg:#16301f; --warn:#e3b54a; --warn-bg:#352a10;
+  --bad:#ef7b6e; --idle-bg:#26221c; color-scheme:dark}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45}
+.wrap{max-width:920px;margin:0 auto;padding-block:28px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:18px}
+nav{display:flex;flex-wrap:wrap;gap:8px}
+nav a{font-weight:600;font-size:14px;color:var(--fg);text-decoration:none;padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:var(--panel)}
+nav a[aria-current="page"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--display);font-size:clamp(28px,5vw,40px);line-height:1.05;margin:4px 0 0;text-wrap:balance}
+.lead{color:var(--muted);max-width:65ch;margin:6px 0 0}
+.by{display:inline-flex;margin-top:8px;font-size:13px;font-weight:600;color:#fff;background:var(--twitch);padding:4px 10px;border-radius:999px;text-decoration:none}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+input[type=search]{font:15px var(--body);color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 12px;width:min(320px,100%)}
+.note{font-size:13px;color:var(--muted)}
+
+.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.stat .k{font-size:12px;color:var(--muted)}
+.stat .v{font-family:var(--mono);font-weight:700;font-size:20px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.seg{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:3px;flex-wrap:wrap}
+.seg button{font:600 13px var(--body);border:0;background:transparent;color:var(--fg);padding:6px 10px;border-radius:6px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+h2{font-family:var(--display);font-size:18px;margin:6px 0 0}
+.tablebox{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.row{display:grid;grid-template-columns:minmax(0,1fr) 120px 64px;gap:10px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.row.hd{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.row a{color:var(--fg);font-weight:600;text-decoration:none;overflow-wrap:anywhere}
+.row a:hover{text-decoration:underline}
+.voc{font-size:13px;color:var(--muted)}
+.lvl{font-family:var(--mono);font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+.row.hunt{background:color-mix(in srgb,var(--bad) 10%,transparent)}
+.tag{font-size:10px;font-weight:800;letter-spacing:.05em;padding:2px 7px;border-radius:999px;margin-left:6px;white-space:nowrap}
+.t-h{background:var(--bad);color:#fff}
+.t-new{background:var(--good-bg);color:var(--good)}
+.t-out{background:var(--idle-bg);color:var(--muted)}
+.row.gone a{text-decoration:line-through;color:var(--muted)}
+@media (max-width:480px){.row{grid-template-columns:minmax(0,1fr) 44px}.row .voc{display:none}}
+.empty{padding:30px 20px;text-align:center;color:var(--muted)}
+.empty b{color:var(--fg);display:block;font-family:var(--display);font-size:18px;margin-bottom:6px}
+footer{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:6px}
+a:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav aria-label="Páginas"><a href="./">Quem mais fez XP</a><a href="radar.html">Radar de hunteds</a><a href="online.html" aria-current="page">Quem está online</a><a href="mortes.html">Últimas mortes</a><a href="exiva.html">Mapa do exiva</a></nav>
+  <header>
+    <div class="eyebrow">Olden 74 · 7.4 · 1x PvP</div>
+    <h1>Quem está online</h1>
+    <p class="lead">Todo mundo que está logado agora no Olden 74. A lista se atualiza sozinha a cada minuto; seus hunteds aparecem primeiro, em vermelho.</p>
+    <a class="by" href="https://www.twitch.tv/elmago21" target="_blank" rel="noopener">twitch.tv/elmago21</a>
+  </header>
+  <section class="strip">
+    <div class="stat"><div class="k">Online agora</div><div class="v" id="s-total">—</div></div>
+    <div class="stat"><div class="k">Hunteds online</div><div class="v" id="s-hunt">—</div></div>
+    <div class="stat"><div class="k">Entraram (última atualização)</div><div class="v" id="s-in">—</div></div>
+    <div class="stat"><div class="k">Atualizado às</div><div class="v" id="s-upd">—</div></div>
+  </section>
+  <div class="bar">
+    <input type="search" id="q" placeholder="Buscar personagem…" aria-label="Buscar personagem" autocomplete="off">
+    <div class="seg" id="voc" role="group" aria-label="Vocação">
+      <button data-v="all">Todos</button><button data-v="4">Knight</button><button data-v="3">Paladin</button><button data-v="1">Sorcerer</button><button data-v="2">Druid</button><button data-v="0">Sem voc.</button>
+    </div>
+  </div>
+  <span class="note" id="note"></span>
+  <section id="hunted-box" hidden>
+    <h2>Seus hunteds online</h2>
+    <div class="tablebox" id="hunted"></div>
+  </section>
+  <section>
+    <h2 id="all-title">Todos online</h2>
+    <div class="tablebox" id="list"><div class="empty"><b>Carregando…</b>Buscando a lista de quem está online.</div></div>
+  </section>
+  <footer>
+    <span>Dados da lista pública de quem está online no olden74.com, lida a cada minuto. "Entrou" marca quem apareceu desde a atualização anterior; quem saiu fica riscado até a próxima.</span>
+    <span>Site não oficial, sem ligação com a equipe do Olden 74.</span>
+  </footer>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const VOC={0:"Sem vocação",1:"Sorcerer",2:"Druid",3:"Paladin",4:"Knight",5:"Master Sorcerer",6:"Elder Druid",7:"Royal Paladin",8:"Elite Knight"};
+const BASE={0:0,1:1,2:2,3:3,4:4,5:1,6:2,7:3,8:4};
+const ONLINE="https://quiet-sea-5869.saviocardoso76-79e.workers.dev/online";
+const hhmm=t=>new Date(t).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+let loads=0, list=[], prev=null, joined=new Set(), gone=[], hunted=new Set(), query="", voc="all", lastT=null;
+try{const v=localStorage.getItem("pg-onvoc"); if(v) voc=v;}catch(e){}
+function setVoc(){document.querySelectorAll("#voc button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===voc?"true":"false"));}
+setVoc();
+$("voc").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;voc=b.dataset.v;try{localStorage.setItem("pg-onvoc",voc)}catch(e){};setVoc();render();});
+$("q").addEventListener("input",e=>{query=e.target.value.trim().toLowerCase();render();});
+function el(tag,cls,text){const e=document.createElement(tag); if(cls)e.className=cls; if(text!=null)e.textContent=text; return e;}
+function row(c,isGone){
+  const [name,lvl,v]=c; const r=el("div","row"+(hunted.has(name.toLowerCase())?" hunt":"")+(isGone?" gone":""));
+  const n=el("div"); const a=el("a",null,name); a.href="https://olden74.com/personagens/"+encodeURIComponent(name); a.target="_blank"; a.rel="noopener"; n.append(a);
+  if(hunted.has(name.toLowerCase())) n.append(el("span","tag t-h","HUNTED"));
+  if(isGone) n.append(el("span","tag t-out","SAIU"));
+  else if(joined.has(name)) n.append(el("span","tag t-new","ENTROU"));
+  r.append(n, el("div","voc",VOC[v]||""), el("div","lvl",lvl!=null?String(lvl):"—"));
+  return r;
+}
+function header(){const h=el("div","row hd"); h.append(el("div",null,"Personagem"),el("div","voc","Vocação"),el("div","lvl","Level")); return h;}
+function render(){
+  const match=c=>(voc==="all"||String(BASE[c[2]])===voc)&&(!query||c[0].toLowerCase().includes(query));
+  const sorted=list.slice().sort((a,b)=>(b[1]||0)-(a[1]||0)||a[0].localeCompare(b[0]));
+  const hs=sorted.filter(c=>hunted.has(c[0].toLowerCase()));
+  $("s-total").textContent=list.length; $("s-hunt").textContent=hs.length; $("s-in").textContent=loads>1?joined.size:"—";
+  const hb=$("hunted"); hb.replaceChildren();
+  $("hunted-box").hidden=!hs.length;
+  if(hs.length){hb.append(header()); for(const c of hs) hb.append(row(c,false));}
+  const shown=sorted.filter(match), goneShown=gone.filter(match);
+  $("all-title").textContent=`Todos online (${shown.length}${shown.length!==list.length?" de "+list.length:""})`;
+  const box=$("list"); box.replaceChildren();
+  if(!shown.length&&!goneShown.length){const e=el("div","empty"); e.append(el("b",null,list.length?"Ninguém encontrado":"Ninguém online"), document.createTextNode(list.length?"Ninguém online com esse filtro.":"A lista ainda está vazia.")); box.append(e); return;}
+  box.append(header());
+  for(const c of shown) box.append(row(c,false));
+  for(const c of goneShown) box.append(row(c,true));
+}
+async function loadHunted(){
+  try{const d=await fetch("radar.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.json()); hunted=new Set((d.chars||[]).map(c=>c.name.toLowerCase())); render();}catch(e){}
+}
+async function load(){
+  try{
+    const r=await fetch(ONLINE,{cache:"no-store"}); if(!r.ok) throw 0; const d=await r.json();
+    if(!d.t) throw 0;
+    if(d.t===lastT) return; lastT=d.t;
+    const next=(d.chars&&d.chars.length?d.chars:(d.names||[]).map(n=>[n,null,null]));
+    if(prev){
+      const before=new Set(prev.map(c=>c[0])), now=new Set(next.map(c=>c[0]));
+      joined=new Set(next.filter(c=>!before.has(c[0])).map(c=>c[0]));
+      gone=prev.filter(c=>!now.has(c[0]));
+    }
+    prev=next; list=next; loads++;
+    $("s-upd").textContent=hhmm(d.t);
+    const late=Date.now()-d.t>5*60000;
+    $("note").textContent=late?`A lista não atualiza desde ${hhmm(d.t)}. Tentando de novo…`:"";
+    render();
+  }catch(e){ if(!list.length) $("list").innerHTML='<div class="empty"><b>Não consegui carregar</b>Tentando de novo em instantes.</div>'; }
+}
+loadHunted(); load(); setInterval(load,20000); setInterval(loadHunted,300000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)load();});
+</script>
+</body>
+</html>
