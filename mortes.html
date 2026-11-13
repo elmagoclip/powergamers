@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Últimas Mortes · Olden 74</title>
+<meta name="description" content="Histórico das últimas mortes do Olden 74 e quem matou. Por twitch.tv/elmago21.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: lista cronológica de mortes; resumo no topo; filtros por tipo de morte e busca */
+:root{
+  --bg:#f3f1ec; --panel:#ffffff; --fg:#1d1a16; --muted:#6f685d; --line:#e2ddd2;
+  --accent:#b8860b; --accent-ink:#ffffff; --pvp:#b03a2e; --pvp-bg:#f8e3e0; --mon:#4d6b2f; --mon-bg:#e7efdc; --warn:#9a6a00; --warn-bg:#fbf0d3; --twitch:#9146ff;
+  --display:"Space Grotesk",system-ui,sans-serif; --body:"Inter",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#14120f; --panel:#1d1a16; --fg:#efe9dd; --muted:#a39a8a; --line:#2f2a23;
+  --accent:#e0b23a; --accent-ink:#1a1408; --pvp:#ef7b6e; --pvp-bg:#3a1c18; --mon:#a6c97f; --mon-bg:#1f2a15; --warn:#e3b54a; --warn-bg:#352a10; color-scheme:dark}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45}
+.wrap{max-width:920px;margin:0 auto;padding-block:28px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:18px}
+nav{display:flex;flex-wrap:wrap;gap:8px}
+nav a{font-weight:600;font-size:14px;color:var(--fg);text-decoration:none;padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:var(--panel)}
+nav a[aria-current="page"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--display);font-size:clamp(28px,5vw,40px);line-height:1.05;margin:4px 0 0;text-wrap:balance}
+.by{display:inline-flex;margin-top:8px;font-size:13px;font-weight:600;color:#fff;background:var(--twitch);padding:4px 10px;border-radius:999px;text-decoration:none}
+.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.stat .k{font-size:12px;color:var(--muted)}
+.stat .v{font-family:var(--mono);font-weight:700;font-size:20px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.stat .s{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-width:0}
+input[type=search]{font:15px var(--body);color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 12px;width:min(300px,100%)}
+.seg{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:3px;flex-wrap:wrap}
+.seg button{font:600 13px var(--body);border:0;background:transparent;color:var(--fg);padding:6px 10px;border-radius:6px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+.note{font-size:13px;color:var(--muted)}
+.list{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.row{display:grid;grid-template-columns:86px minmax(0,1fr);gap:4px 14px;padding:11px 14px;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.when{font-family:var(--mono);font-size:12px;color:var(--muted);line-height:1.3}
+.when b{display:block;color:var(--fg);font-size:13px}
+.what{min-width:0;overflow-wrap:anywhere}
+.what a{color:var(--fg);font-weight:700;text-decoration:none}
+.what a:hover{text-decoration:underline}
+.lv{font-family:var(--mono);font-size:12px;color:var(--muted);margin-left:4px}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px}
+.t-pvp{background:var(--pvp-bg);color:var(--pvp)}
+.t-mon{background:var(--mon-bg);color:var(--mon)}
+.t-unj{background:var(--warn-bg);color:var(--warn)}
+.pk{color:var(--pvp);font-weight:700}
+.mo{color:var(--mon);font-weight:700}
+.empty{padding:40px 20px;text-align:center;color:var(--muted)}
+.empty b{color:var(--fg);display:block;font-family:var(--display);font-size:20px;margin-bottom:6px}
+footer{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:6px}
+a:focus-visible,input:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav aria-label="Páginas"><a href="./">Quem mais fez XP</a><a href="radar.html">Radar de hunteds</a><a href="mortes.html" aria-current="page">Últimas mortes</a></nav>
+  <header>
+    <div class="eyebrow">Olden 74 · 7.4 · 1x PvP</div>
+    <h1>Últimas mortes</h1>
+    <a class="by" href="https://www.twitch.tv/elmago21" target="_blank" rel="noopener">twitch.tv/elmago21</a>
+  </header>
+
+  <section class="strip">
+    <div class="stat"><div class="k">Mortes na lista</div><div class="v" id="s-total">—</div><div class="s" id="s-span">&nbsp;</div></div>
+    <div class="stat"><div class="k">Mortas por players</div><div class="v" id="s-pvp">—</div><div class="s" id="s-unj">&nbsp;</div></div>
+    <div class="stat"><div class="k">Quem mais matou</div><div class="v" id="s-killer">—</div><div class="s" id="s-killer2">&nbsp;</div></div>
+    <div class="stat"><div class="k">Monstro que mais matou</div><div class="v" id="s-mon">—</div><div class="s" id="s-mon2">&nbsp;</div></div>
+  </section>
+
+  <div class="bar">
+    <div class="filters">
+      <input type="search" id="q" placeholder="Buscar personagem ou monstro…" aria-label="Buscar personagem ou monstro" autocomplete="off">
+      <div class="seg" role="group" aria-label="Tipo de morte" id="kind">
+        <button type="button" data-k="all" aria-pressed="true">Todas</button><button type="button" data-k="pvp" aria-pressed="false">Por players</button><button type="button" data-k="mon" aria-pressed="false">Por monstros</button>
+      </div>
+    </div>
+    <span class="note" id="upd"></span>
+  </div>
+
+  <div class="list" id="list"><div class="empty"><b>Carregando as mortes…</b>Buscando a última coleta.</div></div>
+  <footer>
+    <span>Dados do registro público de mortes do olden74.com, atualizados a cada ~10 min. "Injustificada" é como o próprio server marca o frag.</span>
+    <span>Site não oficial, sem ligação com a equipe do Olden 74.</span>
+  </footer>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const fmt=n=>n.toLocaleString("pt-BR");
+const hhmm=t=>new Date(t).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+const day=t=>new Date(t).toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"});
+function ago(t){const m=Math.max(0,Math.round((Date.now()-t)/60000)); if(m<60)return `há ${m} min`; const h=Math.round(m/60); if(h<48)return `há ${h}h`; return `há ${Math.round(h/24)} dias`;}
+let data=null, query="", kind="all";
+try{const k=localStorage.getItem("pg-kind"); if(["all","pvp","mon"].includes(k)) kind=k;}catch(e){}
+function setKind(){document.querySelectorAll("#kind button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.k===kind?"true":"false"));}
+setKind();
+$("kind").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;kind=b.dataset.k;try{localStorage.setItem("pg-kind",kind)}catch(e){};setKind();render();});
+$("q").addEventListener("input",e=>{query=e.target.value.trim().toLowerCase();render();});
+function el(tag,cls,text){const e=document.createElement(tag); if(cls)e.className=cls; if(text!=null)e.textContent=text; return e;}
+function link(name){const a=el("a",null,name); a.href="https://olden74.com/personagens/"+encodeURIComponent(name); a.target="_blank"; a.rel="noopener"; return a;}
+function who(name,isPlayer){ if(isPlayer) return link(name); return el("span","mo",name); }
+function topOf(map){let best=null;for(const [k,v] of map) if(!best||v>best[1]) best=[k,v]; return best;}
+function stats(list){
+  $("s-total").textContent=fmt(list.length);
+  if(list.length) $("s-span").textContent=`${day(list[list.length-1].t)} ${hhmm(list[list.length-1].t)} → ${day(list[0].t)} ${hhmm(list[0].t)}`;
+  const pvp=list.filter(d=>d.p||d.mdp); $("s-pvp").textContent=fmt(pvp.length);
+  $("s-unj").textContent=fmt(list.filter(d=>d.unj||d.mdunj).length)+" injustificadas";
+  const k=new Map(), m=new Map();
+  for(const d of list){
+    const ps=new Set(); if(d.p) ps.add(d.by); if(d.mdp&&d.md) ps.add(d.md);
+    for(const p of ps) k.set(p,(k.get(p)||0)+1);
+    if(!d.p) m.set(d.by,(m.get(d.by)||0)+1);
+  }
+  const tk=topOf(k), tm=topOf(m);
+  $("s-killer").textContent=tk?tk[0]:"—"; $("s-killer2").textContent=tk?`${tk[1]} morte${tk[1]>1?"s":""}`:" ";
+  $("s-mon").textContent=tm?tm[0]:"—"; $("s-mon2").textContent=tm?`${tm[1]} morte${tm[1]>1?"s":""}`:" ";
+}
+function render(){
+  if(!data) return;
+  $("upd").textContent="Última coleta às "+hhmm(data.updated);
+  stats(data.deaths);
+  const list=data.deaths.filter(d=>{
+    const pvp=d.p||d.mdp;
+    if(kind==="pvp"&&!pvp) return false;
+    if(kind==="mon"&&pvp) return false;
+    if(!query) return true;
+    return [d.name,d.by,d.md||""].some(s=>s.toLowerCase().includes(query));
+  });
+  const box=$("list"); box.replaceChildren();
+  if(!list.length){const e=el("div","empty"); e.append(el("b",null,"Nenhuma morte encontrada"), document.createTextNode(query?"Ninguém com esse nome nas últimas mortes.":"Nenhuma morte desse tipo na lista.")); box.append(e); return;}
+  for(const d of list){
+    const row=el("div","row");
+    const w=el("div","when"); w.append(el("b",null,hhmm(d.t)), document.createTextNode(ago(d.t))); w.title=new Date(d.t).toLocaleString("pt-BR");
+    const what=el("div","what");
+    what.append(link(d.name), el("span","lv","lvl "+d.lvl), document.createTextNode(" morreu para "), who(d.by,d.p));
+    if(d.md&&d.md!==d.by){ what.append(document.createTextNode(" e "), who(d.md,d.mdp)); }
+    const tags=el("div","tags");
+    if(d.p||d.mdp) tags.append(el("span","tag t-pvp","PvP")); else tags.append(el("span","tag t-mon","Monstro"));
+    if(d.unj||d.mdunj) tags.append(el("span","tag t-unj","Injustificada"));
+    what.append(tags);
+    row.append(w,what); box.append(row);
+  }
+}
+async function load(){
+  try{ const r=await fetch("deaths.json?t="+Date.now(),{cache:"no-store"}); if(!r.ok) throw 0; data=await r.json(); render(); }
+  catch(e){ if(!data) $("list").innerHTML='<div class="empty"><b>Ainda sem dados</b>A primeira coleta de mortes sai em até 10 minutos.</div>'; }
+}
+load(); setInterval(load,120000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)load();});
+</script>
+</body>
+</html>

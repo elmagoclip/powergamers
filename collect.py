@@ -95,6 +95,7 @@ def main():
                            "active": len(rows), "sum": sum(r[4] for r in rows), "rows": rows[:TOP]}
 
     write_radar(hist, now)
+    write_deaths(now)
 
     rank = {"updated": now, "chars": len(chars), "snapshots": len(hist),
             "oldest": hist[0]["t"], "windows": windows}
@@ -148,6 +149,28 @@ def write_radar(hist, now):
     json.dump({"updated": now, "chars": out}, open(os.path.join(OUT, "radar.json"), "w", encoding="utf-8"),
               ensure_ascii=False, separators=(",", ":"))
     print(f"radar: {len(out)} chars")
+
+
+def write_deaths(now):
+    """Últimas mortes do server (até 200), com quem matou."""
+    items, off = [], 0
+    try:
+        while off is not None and len(items) < 200:
+            j = get_json(f"{BASE}/community/deaths?limit=100&offset={off}", tries=3)
+            items += j.get("items", [])
+            off = j.get("next")
+            time.sleep(0.3)
+    except RuntimeError as e:
+        print("mortes: falhou", e)
+        if not items:
+            return
+    out = [{"t": d["time"] * 1000, "name": d["name"], "lvl": d["level"],
+            "by": d["killer"], "p": d["killer_is_player"], "unj": d["unjustified"],
+            "md": d.get("mostdamage"), "mdp": d.get("mostdamage_is_player"),
+            "mdunj": d.get("mostdamage_unjustified")} for d in items[:200]]
+    json.dump({"updated": now, "deaths": out}, open(os.path.join(OUT, "deaths.json"), "w", encoding="utf-8"),
+              ensure_ascii=False, separators=(",", ":"))
+    print(f"mortes: {len(out)}")
 
 
 if __name__ == "__main__":
