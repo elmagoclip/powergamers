@@ -91,7 +91,7 @@ a:focus-visible,input:focus-visible,button:focus-visible{outline:2px solid var(-
 
   <div class="list" id="list"><div class="empty"><b>Carregando as mortes…</b>Buscando a última coleta.</div></div>
   <footer>
-    <span>Dados do registro público de mortes do olden74.com, atualizados a cada ~10 min. "Injustificada" é como o próprio server marca o frag.</span>
+    <span>Dados do registro público de mortes do olden74.com, atualizados a cada 30 segundos. "Injustificada" é como o próprio server marca o frag.</span>
     <span>Site não oficial, sem ligação com a equipe do Olden 74.</span>
   </footer>
 </div>
@@ -152,11 +152,13 @@ function render(){
     row.append(w,what); box.append(row);
   }
 }
+const LIVE_D="https://quiet-sea-5869.saviocardoso76-79e.workers.dev/mortes";
 async function load(){
-  try{ const r=await fetch("deaths.json?t="+Date.now(),{cache:"no-store"}); if(!r.ok) throw 0; data=await r.json(); render(); }
+  try{ const r=await fetch(LIVE_D,{cache:"no-store"}); if(!r.ok) throw 0; const j=await r.json(); if(!j.deaths||!j.deaths.length) throw 0; data=j; render(); return; }catch(e){}
+  try{ const r=await fetch("deaths.json?t="+Date.now(),{cache:"no-store"}); if(!r.ok) throw 0; const j=await r.json(); if(!data||j.updated>data.updated){data=j; render();} }
   catch(e){ if(!data) $("list").innerHTML='<div class="empty"><b>Ainda sem dados</b>A primeira coleta de mortes sai em até 10 minutos.</div>'; }
 }
-load(); setInterval(load,120000);
+load(); setInterval(load,30000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)load();});
 </script>
 </body>
