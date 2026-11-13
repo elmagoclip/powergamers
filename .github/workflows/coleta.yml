@@ -31,7 +31,7 @@ jobs:
 
       - name: Publica o site (branch gh-pages)
         run: |
-          cp index.html out/index.html
+          cp index.html radar.html out/
           touch out/.nojekyll
           cd out
           git init -q -b gh-pages
