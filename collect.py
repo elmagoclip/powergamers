@@ -10,7 +10,7 @@ TOWNS = {1: "Thais", 2: "Carlin", 3: "Kazordoon", 4: "Ab'Dendriel", 5: "Edron", 
 OUT = sys.argv[1] if len(sys.argv) > 1 else "out"
 WINDOWS = [10, 30, 60, 180, 360, 720, 1440]  # minutos
 KEEP_MS = 25 * 3600 * 1000
-TOP = 150
+TOP = 3000
 HEAD = {"User-Agent": "Mozilla/5.0 (compatible; powergamers-olden74/1.0)",
         "Accept": "application/json"}
 

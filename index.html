@@ -59,6 +59,10 @@ td a:hover{text-decoration:underline}
 tr.me td{background:var(--me)}
 .empty{padding:40px 20px;text-align:center;color:var(--muted)}
 .empty b{color:var(--fg);display:block;font-family:var(--display);font-size:20px;margin-bottom:6px}
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-width:0}
+.sort{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:3px}
+.sort button{font:600 13px var(--body);border:0;background:transparent;color:var(--fg);padding:6px 10px;border-radius:6px;cursor:pointer}
+.sort button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
 nav{display:flex;flex-wrap:wrap;gap:8px}
 nav a{font-weight:600;font-size:14px;color:var(--fg);text-decoration:none;padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:var(--panel)}
 nav a[aria-current="page"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
@@ -77,7 +81,7 @@ footer a{color:var(--muted)}
       <a class="by" href="https://www.twitch.tv/elmago21" target="_blank" rel="noopener">twitch.tv/elmago21</a>
     </div>
     <div class="tabs" role="group" aria-label="Janela de tempo" id="tabs">
-      <button data-m="10">10min</button><button data-m="30">30min</button><button data-m="60">1h</button><button data-m="180">3h</button><button data-m="360">6h</button><button data-m="720">12h</button><button data-m="1440">24h</button>
+      <button data-m="1">1min</button><button data-m="5">5min</button><button data-m="10">10min</button><button data-m="30">30min</button><button data-m="60">1h</button><button data-m="180">3h</button><button data-m="360">6h</button><button data-m="720">12h</button><button data-m="1440">24h</button>
     </div>
   </header>
 
@@ -89,7 +93,12 @@ footer a{color:var(--muted)}
   </section>
 
   <div class="tools">
-    <input type="search" id="q" placeholder="Buscar personagem…" aria-label="Buscar personagem" autocomplete="off">
+    <div class="filters">
+      <input type="search" id="q" placeholder="Buscar personagem…" aria-label="Buscar personagem" autocomplete="off">
+      <div class="sort" role="group" aria-label="Ordenar">
+        <button type="button" data-o="desc" aria-pressed="true">Mais XP</button><button type="button" data-o="asc" aria-pressed="false">Menos XP</button>
+      </div>
+    </div>
     <span class="note" id="note"></span>
   </div>
 
@@ -100,7 +109,7 @@ footer a{color:var(--muted)}
     </table>
   </div>
   <footer>
-    <span>Dados do ranking público de experiência do olden74.com, coletados a cada ~10 min. O XP ganho é a diferença entre a coleta mais recente e a coleta mais próxima do início da janela; quem morre perde XP e pode sumir da lista. A página se atualiza sozinha.</span>
+    <span>Dados de todas as páginas do ranking de experiência do olden74.com (todos os chars com XP), coletados a cada ~10 min (1 e 5 min: medidos minuto a minuto). O XP ganho é a diferença entre a coleta mais recente e a coleta mais próxima do início da janela; quem morre perde XP e pode sumir da lista. A página se atualiza sozinha.</span>
     <span>Feito para a live do <a href="https://www.twitch.tv/elmago21" target="_blank" rel="noopener">El Mago</a>. Site não oficial, sem ligação com a equipe do Olden 74.</span>
   </footer>
 </div>
@@ -111,26 +120,30 @@ const $=id=>document.getElementById(id);
 const fmt=n=>n.toLocaleString("pt-BR");
 const hhmm=t=>new Date(t).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
 const label=m=>m<60?`${m} min`:`${m/60}h`;
-let data=null, win=60, query="";
+const LIVE="https://quiet-sea-5869.saviocardoso76-79e.workers.dev/todos?m=";
+let data=null, win=60, query="", order="desc";
+const live={};
 try{const m=+localStorage.getItem("pg-m"); if(m) win=m;}catch(e){}
 
 function setTabs(){
   document.querySelectorAll("#tabs button").forEach(b=>{
     const m=+b.dataset.m; b.setAttribute("aria-pressed",m===win?"true":"false");
-    b.disabled=!!data&&!data.windows[m];
+    b.disabled=m>=10&&!!data&&!data.windows[m];
     b.title=b.disabled?"Ainda juntando dados para essa janela":"";
   });
 }
 $("tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(!b||b.disabled)return;win=+b.dataset.m;try{localStorage.setItem("pg-m",win)}catch(e){};setTabs();render();});
 $("q").addEventListener("input",e=>{query=e.target.value.trim().toLowerCase();render();});
+document.querySelector(".sort").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;order=b.dataset.o;document.querySelectorAll(".sort button").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));render();});
 function empty(t,s){$("rows").innerHTML='<tr><td colspan="6"><div class="empty"><b></b><span></span></div></td></tr>';$("rows").querySelector("b").textContent=t;$("rows").querySelector("span").textContent=s;}
 
 function render(){
-  if(!data) return;
-  $("s-upd").textContent=hhmm(data.updated);
-  const W=data.windows[win];
+  if(win<10){ if(!live[win]){ empty("Carregando o minuto a minuto…","Buscando quem ganhou XP agora."); return; } }
+  else if(!data) return;
+  $("s-upd").textContent=hhmm(win<10?live[win].to:data.updated);
+  const W=win<10?live[win]:data.windows[win];
   if(!W){
-    const avail=Object.keys(data.windows).map(Number);
+    const avail=data?Object.keys(data.windows).map(Number):[];
     for(const k of["s-top","s-active","s-sum"])$(k).textContent="—"; $("s-top2").innerHTML="&nbsp;"; $("s-span").innerHTML="&nbsp;";
     $("note").textContent="";
     empty("Ainda juntando dados",`O site começou a coletar há pouco. A janela de ${label(win)} aparece quando houver coletas suficientes.`+(avail.length?"":" A primeira comparação sai depois da segunda coleta."));
@@ -138,14 +151,16 @@ function render(){
   }
   $("s-span").textContent=`${hhmm(W.from)} → ${hhmm(W.to)}`;
   $("s-active").textContent=fmt(W.active); $("s-sum").textContent=fmt(W.sum);
-  const top=W.rows[0]; $("s-top").textContent=top?top[0]:"—"; $("s-top2").textContent=top?"+"+fmt(top[4])+" XP":" ";
+  const top=W.rows.reduce((m,r)=>!m||r[4]>m[4]?r:m,null); $("s-top").textContent=top?top[0]:"—"; $("s-top2").textContent=top?"+"+fmt(top[4])+" XP":" ";
   $("note").textContent=W.span<win*0.85?`Ainda não há ${label(win)} de dados: comparando os últimos ${Math.round(W.span)} min.`:`Comparando ${hhmm(W.from)} com ${hhmm(W.to)} (${Math.round(W.span)} min).`;
-  const rows=W.rows.map((r,i)=>({pos:i+1,name:r[0],voc:r[1],lvl:r[2],dl:r[3],gain:r[4]})).filter(r=>!query||r.name.toLowerCase().includes(query));
+  let all=W.rows.map(r=>({name:r[0],voc:r[1],lvl:r[2],dl:r[3],gain:r[4]}));
+  all.sort((a,b)=>order==="asc"?a.gain-b.gain:b.gain-a.gain); all.forEach((r,i)=>r.pos=i+1);
+  const rows=all.filter(r=>!query||r.name.toLowerCase().includes(query));
   if(!rows.length){empty(query?"Nenhum personagem encontrado":"Ninguém ganhou XP nessa janela",query?"Ninguém com esse nome está entre os que mais ganharam XP nessa janela.":"Tente uma janela maior.");return;}
   const tb=document.createElement("tbody"); tb.id="rows";
   for(const r of rows.slice(0,query?150:100)){
     const tr=document.createElement("tr"); if(r.name===ME) tr.className="me";
-    const pos=r.pos<=3?`<span class="medal m${r.pos}">${r.pos}</span>`:r.pos;
+    const pos=(order==="desc"&&r.pos<=3)?`<span class="medal m${r.pos}">${r.pos}</span>`:r.pos;
     tr.innerHTML=`<td class="pos">${pos}</td><td><a target="_blank" rel="noopener"></a></td><td class="voc"></td><td class="num">${r.lvl}${r.dl>0?`<span class="up">+${r.dl}</span>`:""}</td><td class="num gain">+${fmt(r.gain)}</td><td class="num">${fmt(Math.round(r.gain/(W.span/60)))}</td>`;
     const a=tr.querySelector("a"); a.textContent=r.name; a.href="https://olden74.com/personagens/"+encodeURIComponent(r.name);
     tr.querySelector(".voc").textContent=VOC[r.voc]||"";
@@ -160,8 +175,23 @@ async function load(){
     data=await r.json(); setTabs(); render();
   }catch(e){ if(!data) empty("Ainda sem coletas","A primeira coleta ainda não terminou. Volte em alguns minutos."); }
 }
-setTabs(); load(); setInterval(load,120000);
-document.addEventListener("visibilitychange",()=>{if(!document.hidden)load();});
+async function loadLive(){
+  for(const m of [1,5]){
+    if(m!==win && live[m]) continue;
+    try{
+      const r=await fetch(LIVE+m,{cache:"no-store"}); if(!r.ok) throw 0; const j=await r.json();
+      live[m]=j.from?{from:j.from,to:j.updated,span:j.span/60,active:j.active,sum:j.sum,rows:j.rows}:null;
+      if(!live[m]&&j.updated) live[m]=null;
+    }catch(e){}
+  }
+  if(win<10){
+    if(live[win]===null||live[win]===undefined) empty("Ainda juntando dados","O minuto a minuto começou agora. Em até 2 minutos aparece quem ganhou XP.");
+    else render();
+  }
+}
+setTabs(); load(); loadLive(); setInterval(load,120000); setInterval(loadLive,30000);
+$("tabs").addEventListener("click",()=>{ if(win<10) loadLive(); });
+document.addEventListener("visibilitychange",()=>{if(!document.hidden){load();loadLive();}});
 </script>
 </body>
 </html>
