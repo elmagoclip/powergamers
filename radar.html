@@ -47,7 +47,13 @@ input[type=search]{font:15px var(--body);color:var(--fg);background:var(--panel)
 .p-recent{background:var(--warn-bg);color:var(--warn)}
 .p-idle{background:var(--idle-bg);color:var(--muted)}
 .meta{font-size:13px;color:var(--muted)}
-.xp{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:4px}
+.xp{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:4px}
+@media (max-width:420px){.xp{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.xp div.live{outline:1px solid var(--good);outline-offset:-1px}
+.spark{display:flex;align-items:flex-end;gap:2px;height:28px;margin-top:6px}
+.spark i{flex:1;min-width:2px;background:var(--good);border-radius:2px 2px 0 0;opacity:.85}
+.spark i.z{background:var(--line);height:2px!important}
+.sparkcap{font-size:11px;color:var(--muted)}
 .xp div{background:var(--bg);border-radius:8px;padding:6px 8px;min-width:0}
 .xp .k{font-size:11px;color:var(--muted)}
 .xp .v{font-family:var(--mono);font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
@@ -72,7 +78,7 @@ a:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offs
   <header>
     <div class="eyebrow">Olden 74 · 7.4 · 1x PvP</div>
     <h1>Radar de hunteds</h1>
-    <p class="lead">Quem está ganhando XP agora, quando logou, onde morreu por último e quem matou. Os dados vêm do site oficial do Olden 74 e se atualizam a cada ~10 min.</p>
+    <p class="lead">Quem está ganhando XP agora, quando logou, onde morreu por último e quem matou. Os dados vêm do site oficial do Olden 74 e se atualizam minuto a minuto.</p>
     <a class="by" href="https://www.twitch.tv/elmago21" target="_blank" rel="noopener">twitch.tv/elmago21</a>
   </header>
   <div class="bar">
@@ -81,7 +87,7 @@ a:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offs
   </div>
   <div class="list" id="list"><div class="empty"><b>Carregando o radar…</b>Buscando a última coleta.</div></div>
   <footer>
-    <span>"Caçando agora" = ganhou XP nos últimos 10 min. O site do Olden 74 não mostra a posição de ninguém no mapa: as mortes recentes para monstros indicam onde o char costuma caçar.</span>
+    <span>"Caçando agora" = ganhou XP no último minuto (o XP de 1, 5 e 15 min é medido minuto a minuto). O site do Olden 74 não mostra a posição de ninguém no mapa: as mortes recentes para monstros indicam onde o char costuma caçar.</span>
     <span>Site não oficial, sem ligação com a equipe do Olden 74.</span>
   </footer>
 </div>
@@ -92,11 +98,15 @@ const fmt=n=>n.toLocaleString("pt-BR");
 const hhmm=t=>new Date(t).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
 const dm=t=>new Date(t).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
 function ago(t){const m=Math.max(0,Math.round((Date.now()-t)/60000)); if(m<60)return `há ${m} min`; const h=Math.round(m/60); if(h<48)return `há ${h}h`; return `há ${Math.round(h/24)} dias`;}
-let data=null, query="";
+const LIVE="https://quiet-sea-5869.saviocardoso76-79e.workers.dev/";
+let data=null, live=null, query="";
 $("q").addEventListener("input",e=>{query=e.target.value.trim().toLowerCase();render();});
 function el(tag,cls,text){const e=document.createElement(tag); if(cls)e.className=cls; if(text!=null)e.textContent=text; return e;}
+function lv(c){ return live&&live.chars&&live.chars[c.name]; }
 function status(c){
-  const g=c.gain||{};
+  const g=c.gain||{}, L=lv(c);
+  if(L&&L.g1>0) return ["p-hunt","Caçando agora · XP no último minuto",4];
+  if(L&&L.g5>0) return ["p-hunt","Caçou nos últimos 5 min",3];
   if(g["10"]>0) return ["p-hunt","Caçando agora",3];
   if(g["30"]>0) return ["p-recent","Ganhou XP nos últimos 30 min",2];
   if(c.lastlogin && Date.now()-c.lastlogin<90*60000) return ["p-recent","Logou "+ago(c.lastlogin),1];
@@ -111,11 +121,19 @@ function card(c){
   name.append(a, el("span","pill "+cls,txt));
   const meta=el("div","meta",`Level ${c.level} · ${VOC[c.voc]||""} · mora em ${c.town}${c.guild?" · "+c.guild:""}${c.lastlogin?" · último login "+dm(c.lastlogin):""}`);
   const xp=el("div","xp");
-  for(const [k,l] of [["10","10 min"],["30","30 min"],["60","1h"],["180","3h"]]){
-    const v=c.gain&&c.gain[k]; const d=el("div"); d.append(el("div","k","XP "+l));
+  const L=lv(c);
+  const boxes=[["1 min",L?L.g1:null,true],["5 min",L?L.g5:null,true],["15 min",L?L.g15:null,true],["1h",c.gain&&c.gain["60"],false],["3h",c.gain&&c.gain["180"],false]];
+  for(const [l,v,isLive] of boxes){
+    const d=el("div",isLive&&v!=null?"live":null); d.append(el("div","k","XP "+l));
     d.append(el("div","v"+(v>0?" pos":""), v==null?"—":(v>0?"+":"")+fmt(v))); xp.append(d);
   }
   head.append(name,meta,xp);
+  if(L&&L.series&&L.series.length>1){
+    const ser=L.series.slice(-15), mx=Math.max(1,...ser);
+    const sp=el("div","spark"); sp.setAttribute("role","img"); sp.setAttribute("aria-label","XP por minuto nos últimos "+ser.length+" minutos");
+    for(const v of ser){ const b=el("i",v>0?null:"z"); if(v>0) b.style.height=Math.max(8,Math.round(v/mx*100))+"%"; b.title=fmt(v)+" XP"; sp.append(b); }
+    head.append(sp, el("div","sparkcap",`XP por minuto, últimos ${ser.length} min`));
+  }
   const side=el("div","side");
   side.append(el("h3",null,"Últimas mortes"));
   const ul=el("ul");
@@ -138,7 +156,7 @@ function card(c){
 }
 function render(){
   if(!data) return;
-  $("upd").textContent="Última coleta às "+hhmm(data.updated)+" · "+data.chars.length+" personagens no radar";
+  $("upd").textContent=(live&&live.updated?"Ao vivo: "+hhmm(live.updated)+" · ":"")+"Coleta geral: "+hhmm(data.updated)+" · "+data.chars.length+" personagens";
   const list=data.chars.filter(c=>!query||c.name.toLowerCase().includes(query)).sort((a,b)=>{const sa=a.missing||a.error?-1:status(a)[2], sb=b.missing||b.error?-1:status(b)[2]; return sb-sa||((b.gain&&b.gain["60"])||0)-((a.gain&&a.gain["60"])||0);});
   const box=$("list"); box.replaceChildren();
   if(!list.length){const e=el("div","empty"); e.append(el("b",null,query?"Ninguém com esse nome no radar":"Radar vazio"), document.createTextNode(query?"Confira o nome digitado.":"Nenhum personagem na lista do radar ainda.")); box.append(e); return;}
@@ -148,8 +166,11 @@ async function load(){
   try{ const r=await fetch("radar.json?t="+Date.now(),{cache:"no-store"}); if(!r.ok) throw 0; data=await r.json(); render(); }
   catch(e){ if(!data){ $("list").innerHTML='<div class="empty"><b>Radar ainda sem dados</b>A primeira coleta do radar sai em até 10 minutos.</div>'; } }
 }
-load(); setInterval(load,120000);
-document.addEventListener("visibilitychange",()=>{if(!document.hidden)load();});
+async function loadLive(){
+  try{ const r=await fetch(LIVE,{cache:"no-store"}); if(!r.ok) throw 0; live=await r.json(); render(); }catch(e){}
+}
+load(); loadLive(); setInterval(load,120000); setInterval(loadLive,30000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden){load();loadLive();}});
 </script>
 </body>
 </html>
