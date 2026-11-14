@@ -86,6 +86,8 @@ input[type=search]{font:15px var(--body);color:var(--fg);background:var(--panel)
 .al-log .al-level{background:var(--warn-bg)}
 .al-log .al-hunt,.al-log .al-login{background:var(--good-bg)}
 #al-btn:focus-visible,.al-opts input:focus-visible,.al-opts .link:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tag-mk{font-size:11px;font-weight:800;letter-spacing:.06em;padding:3px 8px;border-radius:999px;background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn)}
+.card.mk{border-color:var(--warn);box-shadow:inset 4px 0 0 var(--warn)}
 footer{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:6px}
 footer a{color:var(--muted)}
 a:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -134,6 +136,9 @@ function ago(t){const m=Math.max(0,Math.round((Date.now()-t)/60000)); if(m<60)re
 const LIVE="https://quiet-sea-5869.saviocardoso76-79e.workers.dev/";
 const LIVE_D=LIVE+"mortes";
 let data=null, live=null, liveD=null, query="";
+// etiquetas especiais por hunted (nome em minúsculas: etiqueta)
+const TAGS={"tik tok":"MAKER"};
+const tagOf=c=>TAGS[c.name.toLowerCase()];
 // junta as mortes/frags da coleta geral com as mortes ao vivo do server (sem repetir)
 function mergeT(a,b){const seen=new Set(), out=[]; for(const x of [...a,...b]){const k=x.t+"|"+(x.who||x.by); if(seen.has(k)) continue; seen.add(k); out.push(x);} return out.sort((x,y)=>y.t-x.t);}
 function deathsOf(c){ if(!liveD) return c.deaths; const n=c.name.toLowerCase(); return mergeT(liveD.filter(d=>d.name.toLowerCase()===n).map(d=>({t:d.t,lvl:d.lvl,by:d.by,p:d.p,md:d.md,mdp:d.mdp})), c.deaths); }
@@ -160,6 +165,7 @@ function card(c){
   const a=el("a",null,c.name); a.href="https://olden74.com/personagens/"+encodeURIComponent(c.name); a.target="_blank"; a.rel="noopener";
   const on=isOn(c);
   name.append(a);
+  if(tagOf(c)){ name.append(el("span","tag-mk",tagOf(c))); box.classList.add("mk"); }
   if(on!==null) name.append(el("span","on "+(on?"on-y":"on-n"),on?"ONLINE":"OFFLINE"));
   name.append(el("span","pill "+cls,txt));
   const meta=el("div","meta",`Level ${c.level} · ${VOC[c.voc]||""} · mora em ${c.town}${c.guild?" · "+c.guild:""}${c.lastlogin?" · último login "+dm(c.lastlogin):""}`);
