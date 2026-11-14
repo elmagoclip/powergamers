@@ -202,7 +202,7 @@ function renderStreams(){
   const p=$("st-chars"); p.hidden=!tags.length; p.textContent=tags.length?"Online com nome de streamer: "+tags.join(", "):"";
 }
 async function loadStreams(){ try{ const r=await fetch(STREAMS,{cache:"no-store"}); if(!r.ok) throw 0; streamsD=(await r.json()).items||[]; }catch(e){ if(!streamsD) streamsD=null; } renderStreams(); }
-loadHunted(); load(); loadStreams(); setInterval(loadStreams,60000); setInterval(load,20000); setInterval(loadHunted,300000);
+loadHunted(); load(); loadStreams(); setInterval(loadStreams,60000); setInterval(load,10000); setInterval(loadHunted,300000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)load();});
 </script>
 </body>
