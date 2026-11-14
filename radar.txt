@@ -38,3 +38,16 @@ Demolition Incarcerated
 Panetone
 Bela
 Noox
+# Neutrales Fuertes (level 20+)
+Chaketero En Proceso
+Aguila
+Boss Alienigena
+Comandante Artocks
+Pakistin
+# Neutrales Fuertes abaixo do level 20 (MAKER)
+Tumba Gobierno
+Boss Lodz
+Champurraadoswe
+Kaneki
+Nucholito
+Yeiden
