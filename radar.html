@@ -137,7 +137,7 @@ const LIVE="https://quiet-sea-5869.saviocardoso76-79e.workers.dev/";
 const LIVE_D=LIVE+"mortes";
 let data=null, live=null, liveD=null, query="";
 // etiquetas especiais por hunted (nome em minúsculas: etiqueta)
-const TAGS={"tik tok":"MAKER","eobala gorgoflexx":"MAKER"};
+const TAGS={"tik tok":"MAKER","eobala gorgoflexx":"MAKER","doente":"MAKER"};
 const tagOf=c=>TAGS[c.name.toLowerCase()];
 // junta as mortes/frags da coleta geral com as mortes ao vivo do server (sem repetir)
 function mergeT(a,b){const seen=new Set(), out=[]; for(const x of [...a,...b]){const k=x.t+"|"+(x.who||x.by); if(seen.has(k)) continue; seen.add(k); out.push(x);} return out.sort((x,y)=>y.t-x.t);}
