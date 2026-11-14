@@ -71,6 +71,21 @@ input[type=search]{font:15px var(--body);color:var(--fg);background:var(--panel)
 .pl{font-weight:600;color:var(--bad)}
 .empty{padding:40px 20px;text-align:center;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:12px}
 .empty b{color:var(--fg);display:block;font-family:var(--display);font-size:20px;margin-bottom:6px}
+.alerts{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.al-head{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.al-head strong{font-family:var(--display);font-size:16px}
+#al-btn{font:700 14px var(--body);border:0;border-radius:8px;padding:8px 14px;cursor:pointer;background:var(--accent);color:var(--accent-ink)}
+#al-btn.al-active{background:var(--idle-bg);color:var(--fg)}
+.al-opts{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;font-size:14px}
+.al-opts label{display:inline-flex;gap:6px;align-items:center;cursor:pointer}
+.al-opts .link{font:600 13px var(--body);background:none;border:0;color:var(--accent);cursor:pointer;padding:0;text-decoration:underline}
+.al-log{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px;font-size:13px}
+.al-log li{padding:6px 10px;border-radius:8px;background:var(--bg);overflow-wrap:anywhere}
+.al-log time{font-family:var(--mono);color:var(--muted);margin-right:8px}
+.al-log .al-death{background:color-mix(in srgb,var(--bad) 14%,transparent)}
+.al-log .al-level{background:var(--warn-bg)}
+.al-log .al-hunt,.al-log .al-login{background:var(--good-bg)}
+#al-btn:focus-visible,.al-opts input:focus-visible,.al-opts .link:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 footer{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:6px}
 footer a{color:var(--muted)}
 a:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -85,6 +100,20 @@ a:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offs
     <p class="lead">Quem está ganhando XP agora, quando logou, onde morreu por último e quem matou. Os dados vêm do site oficial do Olden 74 e se atualizam minuto a minuto.</p>
     <a class="by" href="https://www.twitch.tv/elmago21" target="_blank" rel="noopener">twitch.tv/elmago21</a>
   </header>
+  <section class="alerts" aria-label="Alertas dos hunteds">
+    <div class="al-head">
+      <div><strong>Alertas dos hunteds</strong><span class="note" id="al-status"></span></div>
+      <button type="button" id="al-btn">Ligar alertas</button>
+    </div>
+    <div class="al-opts" id="al-opts">
+      <label><input type="checkbox" data-k="login"> Logou</label>
+      <label><input type="checkbox" data-k="hunt"> Começou a caçar</label>
+      <label><input type="checkbox" data-k="level"> Upou level</label>
+      <label><input type="checkbox" data-k="death"> Morreu</label>
+      <button type="button" id="al-test" class="link">Testar som</button>
+    </div>
+    <ul class="al-log" id="al-log" hidden></ul>
+  </section>
   <div class="bar">
     <input type="search" id="q" placeholder="Filtrar por nome…" aria-label="Filtrar por nome" autocomplete="off">
     <span class="note" id="upd"></span>
@@ -181,11 +210,62 @@ async function load(){
   catch(e){ if(!data){ $("list").innerHTML='<div class="empty"><b>Radar ainda sem dados</b>A primeira coleta do radar sai em até 10 minutos.</div>'; } }
 }
 async function loadLive(){
-  try{ const r=await fetch(LIVE,{cache:"no-store"}); if(!r.ok) throw 0; live=await r.json(); render(); }catch(e){}
+  try{ const r=await fetch(LIVE,{cache:"no-store"}); if(!r.ok) throw 0; live=await r.json(); checkLive(); render(); }catch(e){}
 }
 async function loadDeaths(){
-  try{ const r=await fetch(LIVE_D,{cache:"no-store"}); if(!r.ok) throw 0; const j=await r.json(); if(j.deaths){ liveD=j.deaths; render(); } }catch(e){}
+  try{ const r=await fetch(LIVE_D,{cache:"no-store"}); if(!r.ok) throw 0; const j=await r.json(); if(j.deaths){ liveD=j.deaths; checkDeaths(); render(); } }catch(e){}
 }
+/* ---------- alertas: apita quando um hunted loga, começa a caçar, upa ou morre ---------- */
+let alOn=false, alPrefs={login:true,hunt:true,level:true,death:true}, actx=null, prevLive=null, seenD=null, huntAt={}, alLog=[];
+try{const p=JSON.parse(localStorage.getItem("pg-alerts")||"null"); if(p){alOn=!!p.on; Object.assign(alPrefs,p.prefs||{});}}catch(e){}
+function alSave(){try{localStorage.setItem("pg-alerts",JSON.stringify({on:alOn,prefs:alPrefs}))}catch(e){}}
+function huntedNames(){ return data?data.chars.filter(c=>!c.missing&&!c.error).map(c=>c.name):[]; }
+function unlock(){ try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); if(actx.state==="suspended") actx.resume().then(alUI); }catch(e){} alUI(); }
+function beep(kind){
+  if(!actx||actx.state!=="running") return;
+  const seq={login:[660,880],hunt:[520,0,520],level:[523,659,784,1047],death:[440,330,220]}[kind]||[600];
+  let t=actx.currentTime+0.02;
+  for(const f of seq){ if(f){const o=actx.createOscillator(),g=actx.createGain(); o.type="square"; o.frequency.value=f; g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.15,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+0.16); o.connect(g).connect(actx.destination); o.start(t); o.stop(t+0.18);} t+=0.19; }
+}
+function fire(kind,name,text){
+  if(!alOn||!alPrefs[kind]) return;
+  alLog.unshift({t:Date.now(),kind,name,text}); alLog=alLog.slice(0,8); drawLog();
+  beep(kind);
+  try{ if("Notification" in window&&Notification.permission==="granted") new Notification(name+" "+text,{body:"Radar de hunteds · Olden 74",tag:kind+"|"+name}); }catch(e){}
+}
+function drawLog(){ const ul=$("al-log"); ul.replaceChildren(); for(const a of alLog){const li=el("li","al-"+a.kind); li.append(el("time",null,hhmm(a.t)), el("b",null,a.name), document.createTextNode(" "+a.text)); ul.append(li);} ul.hidden=!alLog.length; }
+function alUI(){
+  const b=$("al-btn"); b.textContent=alOn?"Desligar alertas":"Ligar alertas"; b.classList.toggle("al-active",alOn);
+  const perm=("Notification" in window)?Notification.permission:"x", som=actx&&actx.state==="running";
+  $("al-status").textContent=!alOn?" · desligados":" · ligados"+(som?" com som":" (clique em qualquer lugar da página para liberar o som)")+(perm==="granted"?" e notificação":"")+". Deixe esta página aberta.";
+  document.querySelectorAll("#al-opts input").forEach(i=>i.checked=!!alPrefs[i.dataset.k]);
+}
+function checkLive(){
+  if(!live||!live.chars||!data) return;
+  if(prevLive&&live.updated===prevLive.updated) return;
+  const fresh=!!(live.onlineAt&&Date.now()-live.onlineAt<5*60000), onNow=new Set((live.online||[]).map(n=>n.toLowerCase()));
+  for(const n of huntedNames()){
+    const k=n.toLowerCase(), A=live.chars[n], B=prevLive&&prevLive.chars[n];
+    if(prevLive){
+      if(fresh&&prevLive.fresh&&onNow.has(k)&&!prevLive.on.has(k)) fire("login",n,"logou");
+      if(A&&B&&A.lvl>B.lvl) fire("level",n,"upou para o level "+A.lvl);
+      if(A&&A.g1>0&&(!huntAt[n]||Date.now()-huntAt[n]>10*60000)) fire("hunt",n,"está caçando (+"+fmt(A.g1)+" XP no último minuto)");
+    }
+    if(A&&A.g1>0) huntAt[n]=Date.now();
+  }
+  prevLive={updated:live.updated,chars:live.chars,on:onNow,fresh};
+}
+function checkDeaths(){
+  if(!liveD) return;
+  const names=new Set(huntedNames().map(n=>n.toLowerCase()));
+  if(seenD) for(const d of liveD){ if(!seenD.has(d.t+"|"+d.name)&&names.has(d.name.toLowerCase())&&Date.now()-d.t<30*60000) fire("death",d.name,"morreu no level "+d.lvl+" para "+d.by+(d.md&&d.md!==d.by?" e "+d.md:"")); }
+  seenD=new Set(liveD.map(d=>d.t+"|"+d.name));
+}
+$("al-btn").addEventListener("click",async()=>{ alOn=!alOn; if(alOn){ unlock(); try{ if("Notification" in window&&Notification.permission==="default") await Notification.requestPermission(); }catch(e){} setTimeout(()=>beep("login"),150); } alSave(); alUI(); });
+$("al-opts").addEventListener("change",e=>{const k=e.target.dataset&&e.target.dataset.k; if(!k) return; alPrefs[k]=e.target.checked; alSave();});
+$("al-test").addEventListener("click",()=>{ unlock(); setTimeout(()=>beep("level"),150); });
+document.addEventListener("pointerdown",()=>{ if(alOn) unlock(); },{once:true});
+alUI();
 load(); loadLive(); loadDeaths(); setInterval(load,120000); setInterval(loadLive,30000); setInterval(loadDeaths,30000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden){load();loadLive();}});
 </script>
