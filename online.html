@@ -121,7 +121,7 @@ a:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offs
 const $=id=>document.getElementById(id);
 const VOC={0:"Sem vocação",1:"Sorcerer",2:"Druid",3:"Paladin",4:"Knight",5:"Master Sorcerer",6:"Elder Druid",7:"Royal Paladin",8:"Elite Knight"};
 // etiquetas especiais (nome em minúsculas: etiqueta) — as mesmas do Radar
-const TAGS={"tik tok":"MAKER","eobala gorgoflexx":"MAKER","doente":"MAKER","energy field":"MAKER","tumba gobierno":"MAKER","boss lodz":"MAKER","champurraadoswe":"MAKER","kaneki":"MAKER","nucholito":"MAKER","yeiden":"MAKER"};
+const TAGS={"tik tok":"MAKER","eobala gorgoflexx":"MAKER","doente":"MAKER","energy field":"MAKER","tumba gobierno":"MAKER","boss lodz":"MAKER","champurraadoswe":"MAKER","kaneki":"MAKER","nucholito":"MAKER","yeiden":"MAKER","legend jucada":"PRIORIDADE"};
 const BASE={0:0,1:1,2:2,3:3,4:4,5:1,6:2,7:3,8:4};
 const ONLINE="https://quiet-sea-5869.saviocardoso76-79e.workers.dev/online";
 const hhmm=t=>new Date(t).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
@@ -136,7 +136,7 @@ function row(c,isGone){
   const [name,lvl,v]=c; const r=el("div","row"+(hunted.has(name.toLowerCase())?" hunt":"")+(isGone?" gone":""));
   const n=el("div"); const a=el("a",null,name); a.href="https://olden74.com/personagens/"+encodeURIComponent(name); a.target="_blank"; a.rel="noopener"; n.append(a);
   if(hunted.has(name.toLowerCase())) n.append(el("span","tag t-h","HUNTED"));
-  const tg=TAGS[name.toLowerCase()]; if(tg){ n.append(el("span","tag t-mk",tg)); r.classList.add("mkr"); }
+  const tg=TAGS[name.toLowerCase()]; if(tg){ n.append(el("span","tag t-mk",tg)); r.classList.add("mkr"); if(tg==="PRIORIDADE"){ n.lastChild.style.cssText="background:#c0392b;color:#fff;border-color:#c0392b"; r.style.boxShadow="inset 4px 0 0 #c0392b"; } }
   if(isGone) n.append(el("span","tag t-out","SAIU"));
   else if(joined.has(name)) n.append(el("span","tag t-new","ENTROU"));
   r.append(n, el("div","voc",VOC[v]||""), el("div","lvl",lvl!=null?String(lvl):"—"));
@@ -146,7 +146,7 @@ function header(){const h=el("div","row hd"); h.append(el("div",null,"Personagem
 function render(){
   const match=c=>(voc==="all"||String(BASE[c[2]])===voc)&&(!query||c[0].toLowerCase().includes(query));
   const sorted=list.slice().sort((a,b)=>(b[1]||0)-(a[1]||0)||a[0].localeCompare(b[0]));
-  const hs=sorted.filter(c=>hunted.has(c[0].toLowerCase()));
+  const hs=sorted.filter(c=>hunted.has(c[0].toLowerCase())).sort((a,b)=>(TAGS[b[0].toLowerCase()]==="PRIORIDADE")-(TAGS[a[0].toLowerCase()]==="PRIORIDADE"));
   $("s-total").textContent=list.length; $("s-hunt").textContent=hs.length; $("s-in").textContent=loads>1?joined.size:"—";
   const hb=$("hunted"); hb.replaceChildren();
   $("hunted-box").hidden=!hs.length;
