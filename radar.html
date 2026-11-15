@@ -137,7 +137,7 @@ const LIVE="https://quiet-sea-5869.saviocardoso76-79e.workers.dev/";
 const LIVE_D=LIVE+"mortes";
 let data=null, live=null, liveD=null, query="";
 // etiquetas especiais por hunted (nome em minúsculas: etiqueta)
-const TAGS={"tik tok":"MAKER","eobala gorgoflexx":"MAKER","doente":"MAKER","energy field":"MAKER","tumba gobierno":"MAKER","boss lodz":"MAKER","champurraadoswe":"MAKER","kaneki":"MAKER","nucholito":"MAKER","yeiden":"MAKER"};
+const TAGS={"tik tok":"MAKER","eobala gorgoflexx":"MAKER","doente":"MAKER","energy field":"MAKER","tumba gobierno":"MAKER","boss lodz":"MAKER","champurraadoswe":"MAKER","kaneki":"MAKER","nucholito":"MAKER","yeiden":"MAKER","legend jucada":"PRIORIDADE"};
 const tagOf=c=>TAGS[c.name.toLowerCase()];
 // junta as mortes/frags da coleta geral com as mortes ao vivo do server (sem repetir)
 function mergeT(a,b){const seen=new Set(), out=[]; for(const x of [...a,...b]){const k=x.t+"|"+(x.who||x.by); if(seen.has(k)) continue; seen.add(k); out.push(x);} return out.sort((x,y)=>y.t-x.t);}
@@ -165,7 +165,7 @@ function card(c){
   const a=el("a",null,c.name); a.href="https://olden74.com/personagens/"+encodeURIComponent(c.name); a.target="_blank"; a.rel="noopener";
   const on=isOn(c);
   name.append(a);
-  if(tagOf(c)){ name.append(el("span","tag-mk",tagOf(c))); box.classList.add("mk"); }
+  if(tagOf(c)){ name.append(el("span","tag-mk",tagOf(c))); box.classList.add("mk"); if(tagOf(c)==="PRIORIDADE"){ name.lastChild.style.cssText="background:#c0392b;color:#fff;border-color:#c0392b"; box.style.boxShadow="0 0 0 2px #c0392b"; } }
   if(on!==null) name.append(el("span","on "+(on?"on-y":"on-n"),on?"ONLINE":"OFFLINE"));
   name.append(el("span","pill "+cls,txt));
   const meta=el("div","meta",`Level ${c.level} · ${VOC[c.voc]||""} · mora em ${c.town}${c.guild?" · "+c.guild:""}${c.lastlogin?" · último login "+dm(c.lastlogin):""}`);
@@ -206,7 +206,7 @@ function card(c){
 function render(){
   if(!data) return;
   $("upd").textContent=(live&&live.updated?"Ao vivo: "+hhmm(live.updated)+" · ":"")+"Coleta geral: "+hhmm(data.updated)+" · "+data.chars.length+" personagens";
-  const list=data.chars.filter(c=>!query||c.name.toLowerCase().includes(query)).sort((a,b)=>{const sa=a.missing||a.error?-1:status(a)[2], sb=b.missing||b.error?-1:status(b)[2]; return ((isOn(b)?1:0)-(isOn(a)?1:0))||sb-sa||((b.gain&&b.gain["60"])||0)-((a.gain&&a.gain["60"])||0);});
+  const list=data.chars.filter(c=>!query||c.name.toLowerCase().includes(query)).sort((a,b)=>{const sa=a.missing||a.error?-1:status(a)[2], sb=b.missing||b.error?-1:status(b)[2]; return ((tagOf(b)==="PRIORIDADE")-(tagOf(a)==="PRIORIDADE"))||((isOn(b)?1:0)-(isOn(a)?1:0))||sb-sa||((b.gain&&b.gain["60"])||0)-((a.gain&&a.gain["60"])||0);});
   const box=$("list"); box.replaceChildren();
   if(!list.length){const e=el("div","empty"); e.append(el("b",null,query?"Ninguém com esse nome no radar":"Radar vazio"), document.createTextNode(query?"Confira o nome digitado.":"Nenhum personagem na lista do radar ainda.")); box.append(e); return;}
   for(const c of list) box.append(card(c));
