@@ -1,4 +1,7 @@
 # Um nome de personagem por linha. Linhas com # são ignoradas.
+# PRIORIDADE
+Ander
+# Hunteds
 Awinmawe
 Boss Demolition
 Boss Zyler
@@ -10,7 +13,6 @@ Jubileia
 Lethal Jacto
 Renan Tny
 Twitchtv Ignux
-Ander
 Boyceta
 Cleric Of Zera
 Energy Field
@@ -44,6 +46,7 @@ Jordann
 Guizinn Royal
 Max Verstappen
 Pitu
+Mohammad Abdulaziz
 # Neutrales Fuertes (level 20+)
 Chaketero En Proceso
 Aguila
@@ -57,5 +60,4 @@ Champurraadoswe
 Kaneki
 Nucholito
 Yeiden
-
-Mohammad Abdulaziz
+Ander Investidor
