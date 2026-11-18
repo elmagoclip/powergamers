@@ -206,7 +206,8 @@ function card(c){
 function render(){
   if(!data) return;
   $("upd").textContent=(live&&live.updated?"Ao vivo: "+hhmm(live.updated)+" · ":"")+"Coleta geral: "+hhmm(data.updated)+" · "+data.chars.length+" personagens";
-  const list=data.chars.filter(c=>!query||c.name.toLowerCase().includes(query)).sort((a,b)=>{const sa=a.missing||a.error?-1:status(a)[2], sb=b.missing||b.error?-1:status(b)[2]; return ((tagOf(b)==="PRIORIDADE")-(tagOf(a)==="PRIORIDADE"))||((isOn(b)?1:0)-(isOn(a)?1:0))||sb-sa||((b.gain&&b.gain["60"])||0)-((a.gain&&a.gain["60"])||0);});
+  const xp=(c,k)=>(c.gain&&c.gain[k])||0;
+  const list=data.chars.filter(c=>!query||c.name.toLowerCase().includes(query)).sort((a,b)=>((tagOf(b)==="PRIORIDADE")-(tagOf(a)==="PRIORIDADE"))||((a.missing||a.error?1:0)-(b.missing||b.error?1:0))||xp(b,"60")-xp(a,"60")||xp(b,"180")-xp(a,"180")||((isOn(b)?1:0)-(isOn(a)?1:0))||(status(b)[2]-status(a)[2]));
   const box=$("list"); box.replaceChildren();
   if(!list.length){const e=el("div","empty"); e.append(el("b",null,query?"Ninguém com esse nome no radar":"Radar vazio"), document.createTextNode(query?"Confira o nome digitado.":"Nenhum personagem na lista do radar ainda.")); box.append(e); return;}
   for(const c of list) box.append(card(c));
