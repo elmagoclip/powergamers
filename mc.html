@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Caçador de MC · Olden 74</title>
+<meta name="description" content="Aponta personagens que entram, saem e upam juntos no Olden 74: suspeitos de multi-client. Por twitch.tv/elmago21.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+:root{
+  --bg:#f3f1ec; --panel:#ffffff; --fg:#1d1a16; --muted:#6f685d; --line:#e2ddd2;
+  --accent:#b8860b; --accent-ink:#ffffff; --good:#2f7d4a; --bad:#b03a2e; --bad-bg:#f7e1de; --twitch:#9146ff;
+  --display:"Space Grotesk",system-ui,sans-serif; --body:"Inter",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#14120f; --panel:#1d1a16; --fg:#efe9dd; --muted:#a39a8a; --line:#2f2a23;
+  --accent:#e0b23a; --accent-ink:#1a1408; --good:#6cc48a; --bad:#ef7b6e; --bad-bg:#3a1c18; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45}
+.wrap{max-width:920px;margin:0 auto;padding:28px 16px 48px;display:flex;flex-direction:column;gap:18px}
+nav{display:flex;flex-wrap:wrap;gap:8px}
+nav a{font-weight:600;font-size:14px;color:var(--fg);text-decoration:none;padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:var(--panel)}
+nav a[aria-current="page"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--display);font-size:clamp(28px,5vw,40px);line-height:1.05;margin:4px 0 0}
+h2{font-family:var(--display);font-size:20px;margin:0}
+.lead{color:var(--muted);max-width:68ch;margin:6px 0 0}
+.by{display:inline-flex;margin-top:8px;font-size:13px;font-weight:600;color:#fff;background:var(--twitch);padding:4px 10px;border-radius:999px;text-decoration:none}
+.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.stat .k{font-size:12px;color:var(--muted)}
+.stat .v{font-family:var(--mono);font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+input[type=search]{font:15px var(--body);color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 12px;width:min(320px,100%)}
+button{font:600 14px var(--body);color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 12px;cursor:pointer}
+.note{font-size:13px;color:var(--muted)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.card.hot{border-color:var(--bad);background:linear-gradient(0deg,var(--panel),var(--panel)),var(--bad-bg)}
+.chars{display:flex;flex-wrap:wrap;gap:8px}
+.ch{border:1px solid var(--line);border-radius:8px;padding:4px 10px;font-weight:600}
+.ch small{font-weight:400;color:var(--muted);margin-left:6px}
+.ch.on{border-color:var(--good)}
+.ev{font-family:var(--mono);font-size:13px;color:var(--muted)}
+.score{font-family:var(--mono);font-weight:700;color:var(--bad)}
+.empty{background:var(--panel);border:1px dashed var(--line);border-radius:12px;padding:22px;color:var(--muted);text-align:center}
+.empty b{display:block;color:var(--fg);margin-bottom:4px}
+.pulse{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--good);margin-right:6px;animation:p 1.6s infinite}
+@keyframes p{50%{opacity:.25}}
+footer{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav aria-label="Páginas"><a href="./">Quem mais fez XP</a><a href="radar.html">Radar de hunteds</a><a href="online.html">Quem está online</a><a href="mortes.html">Últimas mortes</a><a href="exiva.html">Mapa do exiva</a><a href="mc.html" aria-current="page">Caçador de MC</a></nav>
+  <header>
+    <div class="eyebrow">Olden 74 · multi-client</div>
+    <h1>Caçador de MC</h1>
+    <p class="lead">Esta página fica olhando quem está online e anota quem <b>entra, sai e upa no mesmo minuto</b>. Quando dois ou mais chars fazem isso juntos várias vezes, provavelmente é a mesma pessoa jogando com mais de um personagem. <b>Deixe a página aberta</b>: quanto mais tempo ela observa, mais certeiro fica. É suspeita, não prova: dupla que sempre joga junta também pode aparecer.</p>
+    <a class="by" href="https://www.twitch.tv/elmago21" target="_blank" rel="noopener">twitch.tv/elmago21</a>
+  </header>
+  <section class="strip">
+    <div class="stat"><div class="k">Observando há</div><div class="v" id="s-time">—</div></div>
+    <div class="stat"><div class="k">Leituras da lista</div><div class="v" id="s-snaps">—</div></div>
+    <div class="stat"><div class="k">Entradas/saídas anotadas</div><div class="v" id="s-ev">—</div></div>
+    <div class="stat"><div class="k">Grupos suspeitos</div><div class="v" id="s-sus">—</div></div>
+  </section>
+  <div class="bar">
+    <input type="search" id="q" placeholder="Ver com quem um char anda junto…" aria-label="Buscar personagem" autocomplete="off">
+    <div class="note" id="status"><span class="pulse"></span>Conectando…</div>
+  </div>
+  <section id="lookup"></section>
+  <h2>Suspeitos de MC</h2>
+  <section id="list" style="display:flex;flex-direction:column;gap:12px"></section>
+  <div class="bar">
+    <span class="note">Os dados ficam salvos só neste navegador (últimos 3 dias). Logins em massa, tipo depois do server save, são ignorados.</span>
+    <button id="reset">Zerar dados</button>
+  </div>
+  <footer>Dados da lista de online do Olden 74, lidos a cada 20 segundos enquanto a página está aberta.</footer>
+</div>
+<script>
+const ONLINE="https://quiet-sea-5869.saviocardoso76-79e.workers.dev/online";
+const VOC={0:"Sem voc.",1:"Sorcerer",2:"Druid",3:"Paladin",4:"Knight",5:"Master Sorcerer",6:"Elder Druid",7:"Royal Paladin",8:"Elite Knight"};
+const KEY="mc74_v1", KEEP=72*3600e3, MASS=20, GAP=4*60e3;
+const MIN_CO=4, MIN_SCORE=0.6;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let S={start:0,snaps:0,lastT:0,prev:null,ev:[],info:{}};
+function load(){ try{ const j=JSON.parse(localStorage.getItem(KEY)||"null"); if(j&&j.ev) S=j; }catch(e){} }
+function save(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} }
+load();
+let online=new Set();
+
+async function poll(){
+  try{
+    const r=await fetch(ONLINE,{cache:"no-store"}); if(!r.ok) throw 0;
+    const d=await r.json(); if(!d.t) throw 0;
+    const chars=(d.chars&&d.chars.length?d.chars:(d.names||[]).map(n=>[n,null,null]));
+    online=new Set(chars.map(c=>c[0]));
+    if(d.t===S.lastT){ setStatus(true); return; }
+    const now={}; chars.forEach(c=>{ now[c[0]]=c[1]; S.info[c[0]]=[c[1],c[2],d.t]; });
+    if(!S.start) S.start=d.t;
+    if(S.prev && d.t-S.lastT<=GAP){
+      const j=[],l=[],u=[];
+      for(const n in now){ if(!(n in S.prev)) j.push(n); else if(now[n]!=null&&S.prev[n]!=null&&now[n]>S.prev[n]) u.push(n); }
+      for(const n in S.prev){ if(!(n in now)) l.push(n); }
+      const e={t:d.t};
+      if(j.length>=2&&j.length<=MASS) e.j=j;
+      if(l.length>=2&&l.length<=MASS) e.l=l;
+      if(u.length>=2&&u.length<=MASS*2) e.u=u;
+      // tambem conta eventos isolados (1 char) pra saber o total de cada um
+      e.n=[...j,...l,...u];
+      if(j.length>MASS||l.length>MASS) e.mass=1;
+      if(e.n.length) S.ev.push(e);
+    }
+    S.prev=now; S.lastT=d.t; S.snaps++;
+    S.ev=S.ev.filter(e=>d.t-e.t<=KEEP);
+    for(const n in S.info){ if(d.t-S.info[n][2]>KEEP) delete S.info[n]; }
+    save(); analyze(); setStatus(true);
+  }catch(e){ setStatus(false); }
+}
+function setStatus(ok){
+  const t=S.lastT?new Date(S.lastT).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit"}):"—";
+  $("status").innerHTML=ok?`<span class="pulse"></span>Observando · ${online.size} online · lista de ${t}`:"Não consegui ler a lista agora. Tentando de novo…";
+}
+
+let pairs=[], tot={};
+function analyze(){
+  tot={}; const co=new Map();
+  for(const e of S.ev){
+    if(e.mass) continue;
+    for(const n of e.n) tot[n]=(tot[n]||0)+1;
+    for(const k of ["j","l","u"]){
+      const g=e[k]; if(!g) continue;
+      for(let a=0;a<g.length;a++) for(let b=a+1;b<g.length;b++){
+        const key=g[a]<g[b]?g[a]+"\u0001"+g[b]:g[b]+"\u0001"+g[a];
+        const c=co.get(key)||{j:0,l:0,u:0}; c[k]++; co.set(key,c);
+      }
+    }
+  }
+  pairs=[];
+  for(const [key,c] of co){
+    const [a,b]=key.split("\u0001"); const n=c.j+c.l+c.u;
+    const score=n/Math.max(1,Math.min(tot[a]||1,tot[b]||1));
+    pairs.push({a,b,c,n,score});
+  }
+  pairs.sort((x,y)=>y.n*y.score-x.n*x.score);
+  render();
+}
+function groups(){
+  const strong=pairs.filter(p=>p.n>=MIN_CO&&p.score>=MIN_SCORE);
+  const par={}; const f=x=>par[x]===x?x:(par[x]=f(par[x]));
+  for(const p of strong){ par[p.a]??=p.a; par[p.b]??=p.b; par[f(p.a)]=f(p.b); }
+  const g={}; for(const x in par){ (g[f(x)]??=[]).push(x); }
+  return Object.values(g).map(m=>{
+    const ps=strong.filter(p=>m.includes(p.a)&&m.includes(p.b));
+    const best=Math.max(...ps.map(p=>p.score)), ev=ps.reduce((s,p)=>s+p.n,0);
+    const c=ps.reduce((s,p)=>({j:s.j+p.c.j,l:s.l+p.c.l,u:s.u+p.c.u}),{j:0,l:0,u:0});
+    return {m,best,ev,c,pairs:ps};
+  }).sort((x,y)=>y.ev*y.best-x.ev*x.best);
+}
+function chip(n){
+  const i=S.info[n]||[]; const lv=i[0]!=null?"lv "+i[0]:""; const v=i[1]!=null?VOC[i[1]]||"":"";
+  return `<span class="ch ${online.has(n)?"on":""}" title="${online.has(n)?"online agora":"offline"}">${esc(n)}<small>${esc([lv,v].filter(Boolean).join(" · "))}</small></span>`;
+}
+function render(){
+  const hrs=S.start&&S.lastT?(S.lastT-S.start)/3600e3:0;
+  $("s-time").textContent=hrs<1?Math.round(hrs*60)+" min":hrs.toFixed(1)+" h";
+  $("s-snaps").textContent=S.snaps;
+  $("s-ev").textContent=S.ev.reduce((s,e)=>s+(e.mass?0:e.n.length),0);
+  const gs=groups(); $("s-sus").textContent=gs.length;
+  if(!gs.length){
+    $("list").innerHTML=`<div class="empty"><b>${hrs<1?"Coletando dados…":"Nenhum suspeito forte ainda"}</b>Precisa ver o mesmo grupo entrar ou sair junto pelo menos ${MIN_CO} vezes. Deixe a página aberta por algumas horas.</div>`;
+  } else {
+    $("list").innerHTML=gs.slice(0,40).map(g=>`<div class="card ${g.best>=0.85&&g.ev>=6?"hot":""}">
+      <div class="chars">${g.m.map(chip).join("")}</div>
+      <div class="ev"><span class="score">${Math.round(g.best*100)}% juntos</span> · entraram juntos ${g.c.j}x · saíram juntos ${g.c.l}x · upou junto ${g.c.u}x</div></div>`).join("");
+  }
+  lookup();
+}
+function lookup(){
+  const q=$("q").value.trim().toLowerCase(); if(!q){ $("lookup").innerHTML=""; return; }
+  const name=Object.keys(S.info).find(n=>n.toLowerCase()===q)||Object.keys(S.info).find(n=>n.toLowerCase().includes(q));
+  if(!name){ $("lookup").innerHTML=`<div class="empty"><b>Ainda não vi esse char</b>Ele precisa aparecer online enquanto a página está aberta.</div>`; return; }
+  const mine=pairs.filter(p=>p.a===name||p.b===name).slice(0,8);
+  $("lookup").innerHTML=`<div class="card"><div class="chars">${chip(name)}</div><div class="ev">${tot[name]||0} entradas/saídas/ups anotados</div>`+
+    (mine.length?mine.map(p=>{const o=p.a===name?p.b:p.a; return `<div class="chars">${chip(o)}<span class="ev"><span class="score">${Math.round(p.score*100)}%</span> · entrou ${p.c.j}x · saiu ${p.c.l}x · upou ${p.c.u}x junto</span></div>`}).join(""):`<div class="note">Nenhum char fez nada junto com ele ainda.</div>`)+`</div>`;
+}
+$("q").addEventListener("input",lookup);
+$("reset").addEventListener("click",()=>{ S={start:0,snaps:0,lastT:0,prev:null,ev:[],info:{}}; save(); analyze(); });
+analyze(); poll(); setInterval(poll,20000);
+</script>
+</body>
+</html>
