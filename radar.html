@@ -137,7 +137,7 @@ const LIVE="https://quiet-sea-5869.saviocardoso76-79e.workers.dev/";
 const LIVE_D=LIVE+"mortes";
 let data=null, live=null, liveD=null, query="";
 // etiquetas especiais por hunted (nome em minúsculas: etiqueta)
-const TAGS={"tik tok":"MAKER","eobala gorgoflexx":"MAKER","doente":"MAKER","energy field":"MAKER","tumba gobierno":"MAKER","boss lodz":"MAKER","champurraadoswe":"MAKER","kaneki":"MAKER","nucholito":"MAKER","yeiden":"MAKER","max verstappen":"MAKER","pitu":"MAKER","wicked owns":"MAKER","kick renantny":"MAKER","papacu":"MAKER","lemenskzy":"MAKER","sir medico":"MAKER","cleric of zera":"MAKER","boss zyler":"MAKER","incocessus":"MAKER","olden neetuuh":"MAKER","katia silver ms":"MAKER","ander":"PRIORIDADE","ander investidor":"MAKER","ander":"PRIORIDADE","ander investidor":"MAKER","zipzap":"MAKER","legend jucada":"PRIORIDADE","rzika":"PRIORIDADE"};
+const TAGS={"tik tok":"MAKER","eobala gorgoflexx":"MAKER","doente":"MAKER","energy field":"MAKER","tumba gobierno":"MAKER","boss lodz":"MAKER","champurraadoswe":"MAKER","kaneki":"MAKER","nucholito":"MAKER","yeiden":"MAKER","max verstappen":"MAKER","pitu":"MAKER","wicked owns":"MAKER","kick renantny":"MAKER","papacu":"MAKER","lemenskzy":"MAKER","sir medico":"MAKER","cleric of zera":"MAKER","boss zyler":"MAKER","incocessus":"MAKER","olden neetuuh":"MAKER","katia silver ms":"MAKER","leleu":"RED SKULL","awinmawe":"RED SKULL","ander":"PRIORIDADE","ander investidor":"MAKER","ander":"PRIORIDADE","ander investidor":"MAKER","zipzap":"MAKER","legend jucada":"PRIORIDADE","rzika":"PRIORIDADE"};
 const tagOf=c=>TAGS[c.name.toLowerCase()];
 // junta as mortes/frags da coleta geral com as mortes ao vivo do server (sem repetir)
 function mergeT(a,b){const seen=new Set(), out=[]; for(const x of [...a,...b]){const k=x.t+"|"+(x.who||x.by); if(seen.has(k)) continue; seen.add(k); out.push(x);} return out.sort((x,y)=>y.t-x.t);}
@@ -165,7 +165,7 @@ function card(c){
   const a=el("a",null,c.name); a.href="https://olden74.com/personagens/"+encodeURIComponent(c.name); a.target="_blank"; a.rel="noopener";
   const on=isOn(c);
   name.append(a);
-  if(tagOf(c)){ name.append(el("span","tag-mk",tagOf(c))); box.classList.add("mk"); if(tagOf(c)==="PRIORIDADE"){ name.lastChild.style.cssText="background:#c0392b;color:#fff;border-color:#c0392b"; box.style.boxShadow="0 0 0 2px #c0392b"; } }
+  if(tagOf(c)){ name.append(el("span","tag-mk",tagOf(c))); box.classList.add("mk"); if(tagOf(c)==="RED SKULL"){ name.lastChild.style.cssText="background:#7a0b0b;color:#fff;border-color:#ff3b3b"; name.lastChild.textContent="💀 RED SKULL"; } if(tagOf(c)==="PRIORIDADE"){ name.lastChild.style.cssText="background:#c0392b;color:#fff;border-color:#c0392b"; box.style.boxShadow="0 0 0 2px #c0392b"; } }
   if(on!==null) name.append(el("span","on "+(on?"on-y":"on-n"),on?"ONLINE":"OFFLINE"));
   name.append(el("span","pill "+cls,txt));
   const meta=el("div","meta",`Level ${c.level} · ${VOC[c.voc]||""} · mora em ${c.town}${c.guild?" · "+c.guild:""}${c.lastlogin?" · último login "+dm(c.lastlogin):""}`);
