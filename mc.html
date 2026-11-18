@@ -71,6 +71,11 @@ footer{font-size:12px;color:var(--muted)}
     <input type="search" id="q" placeholder="Filtrar por nome de char…" aria-label="Buscar personagem" autocomplete="off">
     <div class="note" id="status"><span class="pulse"></span>Conectando…</div>
   </div>
+  <section style="display:flex;flex-direction:column;gap:10px">
+    <h2>Seus hunteds: markers e MC</h2>
+    <p class="note" style="margin:0">Só os chars da sua hunted list. O robô guarda <b>14 dias</b> de histórico deles (os outros só 3), então quanto mais tempo passa, mais certinho fica. Atualiza a cada 5 minutos.</p>
+    <div id="hl" style="display:flex;flex-direction:column;gap:10px"><p class="note">Carregando…</p></div>
+  </section>
   <section class="card" id="mk">
     <h2>Descobrir marker / MC de um char</h2>
     <p class="note" style="margin:0">Digita o nome do cara e o robô mostra com quem ele mais entra, sai e upa junto. Char de level baixo que anda colado nele é <b>possível marker</b>.</p>
@@ -103,7 +108,8 @@ function render(){
   $("s-time").textContent=hrs<1?Math.round(hrs*60)+" min":hrs<48?hrs.toFixed(1)+" h":(hrs/24).toFixed(1)+" dias";
   $("s-snaps").textContent=(data.reads||0).toLocaleString("pt-BR");
   $("s-ev").textContent=(data.events||0).toLocaleString("pt-BR");
-  const gs=(data.groups||[]).filter(g=>!q||g.m.some(c=>c[0].toLowerCase().includes(q)));
+  const hasH=g=>g.m.some(c=>hset.has(c[0].toLowerCase()));
+  const gs=(data.groups||[]).filter(g=>!q||g.m.some(c=>c[0].toLowerCase().includes(q))).sort((a,b)=>hasH(b)-hasH(a));
   $("s-sus").textContent=(data.groups||[]).length;
   $("status").innerHTML=data.updated?`<span class="pulse"></span>Robô ativo · resultado de ${hhmm(data.updated)} · ${online.size} online agora`:"Robô começando a coletar…";
   if(!gs.length){
@@ -119,6 +125,29 @@ async function load(){
   try{ const r=await fetch(ONLINE,{cache:"no-store"}); if(r.ok){ const d=await r.json(); online=new Set((d.chars&&d.chars.length?d.chars.map(c=>c[0]):(d.names||[]))); } }catch(e){}
   if(!data) $("status").textContent="Não consegui ler o resultado agora. Tentando de novo…";
   render();
+}
+const HUNTED="https://mc-olden.saviocardoso76-79e.workers.dev/hunted";
+let hset=new Set();
+const lvl=(p,me)=>p.score>=0.5&&p.n>=3&&p.lvl!=null&&(p.lvl<=20||(me&&p.lvl<=me*0.6));
+function conf(p){ return p.n>=8&&p.score>=0.8?["forte","var(--bad)"]:p.n>=4&&p.score>=0.6?["suspeito","#c77d0a"]:["pouca prova","var(--muted)"]; }
+function prow(p,me){
+  const mk=lvl(p,me), mc=!mk&&p.score>=0.6&&p.n>=4, [cl,cc]=conf(p);
+  const tag=mk?'<span class="ch" style="background:var(--bad);color:#fff;border-color:var(--bad)">🎯 possível marker</span>':mc?'<span class="ch" style="border-color:var(--bad);color:var(--bad)">possível MC</span>':"";
+  const ht=p.hunted?'<span class="ch" style="border-color:var(--accent);color:var(--accent)">também hunted</span>':"";
+  return `<div class="ev" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">${chip([p.name,p.lvl,p.voc])}<span class="score">${Math.round(p.score*100)}% juntos</span> ${p.n}x juntos (entrou ${p.j} · saiu ${p.l} · upou ${p.u}) <b style="color:${cc}">${cl}</b> ${tag}${ht}</div>`;
+}
+async function loadHunted(){
+  let d=null; try{ const r=await fetch(HUNTED,{cache:"no-store"}); d=await r.json(); }catch(e){}
+  if(!d||!d.updated){ $("hl").innerHTML='<div class="empty"><b>Começando a juntar dados dos hunteds…</b>Volte daqui uns minutos.</div>'; return; }
+  hset=new Set((d.hunt||[]).map(x=>x.toLowerCase()));
+  const key=e=>Math.max(0,...e.partners.map(p=>p.score*Math.min(p.n,8)));
+  const L=(d.list||[]).filter(e=>e.partners.length).sort((a,b)=>key(b)-key(a));
+  const semDado=(d.hunt||[]).length-L.length;
+  $("hl").innerHTML=(L.length?L.map(e=>`<div class="card ${e.partners.some(p=>p.n>=8&&p.score>=0.8)?"hot":""}">
+    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center"><span class="ch" style="border-color:var(--accent)">🎯 ${esc(e.name)}<small>${e.lvl!=null?"lv "+e.lvl:""} ${VOC[e.voc]||""}</small></span><span class="note">${online.has(e.name)?"🟢 online":"offline"} · ${e.n} entradas/saídas anotadas</span></div>
+    ${e.partners.map(p=>prow(p,e.lvl)).join("")}</div>`).join(""):'<div class="empty"><b>Nenhum hunted com parceiro ainda</b>Precisa eles logarem/deslogarem algumas vezes.</div>')
+    +(semDado>0?`<p class="note">${semDado} hunteds ainda sem ninguém andando junto (ou não logaram desde que o robô começou).</p>`:"");
+  if(data) render();
 }
 const CHAR="https://mc-olden.saviocardoso76-79e.workers.dev/char?n=";
 $("mkf").addEventListener("submit",async e=>{
@@ -137,7 +166,8 @@ $("mkf").addEventListener("submit",async e=>{
   }).join("")+`</div><p class="note">% juntos = das vezes que um dos dois logou/deslogou, quantas foram no mesmo minuto. Quanto mais vezes, mais certeza.</p>`;
 });
 $("q").addEventListener("input",e=>{q=e.target.value.trim().toLowerCase(); render();});
-load(); setInterval(load,60000);
+load().then(loadHunted); setInterval(load,60000);
+setInterval(loadHunted,120000);
 </script>
 </body>
 </html>
