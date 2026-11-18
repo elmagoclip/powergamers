@@ -120,7 +120,7 @@ def write_radar(hist, now):
     path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "radar.txt")
     if not os.path.exists(path):
         return
-    names = [l.strip() for l in open(path, encoding="utf-8") if l.strip() and not l.startswith("#")][:60]
+    names = [l.strip() for l in open(path, encoding="utf-8") if l.strip() and not l.startswith("#")][:100]
     q = urllib.parse.quote
     out = []
     for name in names:
