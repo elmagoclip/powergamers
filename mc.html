@@ -71,7 +71,16 @@ footer{font-size:12px;color:var(--muted)}
     <input type="search" id="q" placeholder="Filtrar por nome de char…" aria-label="Buscar personagem" autocomplete="off">
     <div class="note" id="status"><span class="pulse"></span>Conectando…</div>
   </div>
-    <h2>Suspeitos de MC</h2>
+  <section class="card" id="mk">
+    <h2>Descobrir marker / MC de um char</h2>
+    <p class="note" style="margin:0">Digita o nome do cara e o robô mostra com quem ele mais entra, sai e upa junto. Char de level baixo que anda colado nele é <b>possível marker</b>.</p>
+    <form id="mkf" class="bar" style="justify-content:flex-start">
+      <input type="search" id="mkq" placeholder="Nome do char (ex: Ander)" aria-label="Nome do char para investigar" autocomplete="off">
+      <button type="submit">Investigar</button>
+    </form>
+    <div id="mkr"></div>
+  </section>
+  <h2>Suspeitos de MC</h2>
   <section id="list" style="display:flex;flex-direction:column;gap:12px"></section>
   <div class="bar">
     <span class="note">Considera os últimos 3 dias de atividade. Logins em massa, tipo depois do server save, são ignorados. O resultado atualiza a cada 5 minutos.</span>
@@ -111,6 +120,22 @@ async function load(){
   if(!data) $("status").textContent="Não consegui ler o resultado agora. Tentando de novo…";
   render();
 }
+const CHAR="https://mc-olden.saviocardoso76-79e.workers.dev/char?n=";
+$("mkf").addEventListener("submit",async e=>{
+  e.preventDefault(); const n=$("mkq").value.trim(); if(!n) return;
+  $("mkr").innerHTML='<p class="note">Procurando…</p>';
+  let d=null; try{ const r=await fetch(CHAR+encodeURIComponent(n)); d=await r.json(); }catch(err){}
+  if(!d||d.error||!d.name){ $("mkr").innerHTML=`<div class="empty"><b>Não achei "${esc(n)}"</b>O robô só conhece quem entrou ou saiu desde que ele começou. Confira o nome ou tente mais tarde.</div>`; return; }
+  const ps=(d.partners||[]).filter(p=>p.n>=2).sort((a,b)=>(b.score*Math.min(b.n,6))-(a.score*Math.min(a.n,6)));
+  const head=`<p style="margin:0"><b>${esc(d.name)}</b> <span class="note">${d.lvl?"lv "+d.lvl:""} ${VOC[d.voc]||""} · ${online.has(d.name)?"🟢 online":"offline"} · ${d.n} entradas/saídas anotadas</span></p>`;
+  if(!ps.length){ $("mkr").innerHTML=head+`<p class="note">Ainda ninguém andando junto com ele. Volte daqui umas horas.</p>`; return; }
+  $("mkr").innerHTML=head+`<div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">`+ps.map(p=>{
+    const mk=p.score>=0.5&&p.n>=3&&p.lvl!=null&&(p.lvl<=20||(d.lvl&&p.lvl<=d.lvl*0.6));
+    const mc=!mk&&p.score>=0.6&&p.n>=4;
+    const tag=mk?'<span class="ch" style="background:var(--bad);color:#fff;border-color:var(--bad)">🎯 possível marker</span>':mc?'<span class="ch" style="border-color:var(--bad);color:var(--bad)">possível MC</span>':"";
+    return `<div class="ev" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">${chip([p.name,p.lvl,p.voc])}<span class="score">${Math.round(p.score*100)}% juntos</span> entrou ${p.j}x · saiu ${p.l}x · upou ${p.u}x ${tag}</div>`;
+  }).join("")+`</div><p class="note">% juntos = das vezes que um dos dois logou/deslogou, quantas foram no mesmo minuto. Quanto mais vezes, mais certeza.</p>`;
+});
 $("q").addEventListener("input",e=>{q=e.target.value.trim().toLowerCase(); render();});
 load(); setInterval(load,60000);
 </script>
