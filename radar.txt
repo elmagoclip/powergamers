@@ -1,6 +1,7 @@
 # Um nome de personagem por linha. Linhas com # são ignoradas.
 # PRIORIDADE
 Ander
+Rzika
 # Hunteds
 Awinmawe
 Boss Demolition
@@ -45,8 +46,12 @@ Guizinn Royal
 Max Verstappen
 Pitu
 Mohammad Abdulaziz
-Rzika
 Raro
+Josh
+Gasperino
+Master Alchemist
+Sir Medico
+Tacalhapeu
 # Neutrales Fuertes (level 20+)
 Chaketero En Proceso
 Aguila
