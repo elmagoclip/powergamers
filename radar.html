@@ -145,7 +145,7 @@ function deathsOf(c){ if(!liveD) return c.deaths; const n=c.name.toLowerCase(); 
 function fragsOf(c){ if(!liveD) return c.frags; const n=c.name.toLowerCase(); const f=[]; for(const d of liveD){ const last=d.p&&d.by.toLowerCase()===n, as=d.mdp&&d.md&&d.md.toLowerCase()===n; if(last||as) f.push({t:d.t,who:d.name,lvl:d.lvl,unj:!!(d.unj||d.mdunj),last}); } return mergeT(f, c.frags); }
 $("q").addEventListener("input",e=>{query=e.target.value.trim().toLowerCase();render();});
 function el(tag,cls,text){const e=document.createElement(tag); if(cls)e.className=cls; if(text!=null)e.textContent=text; return e;}
-function lv(c){ return live&&live.chars&&live.chars[c.name]; }
+function lv(c){ const L=live&&live.chars&&live.chars[c.name]; if(L&&L.g1==null&&L.series&&L.series.length) L.g1=L.series[L.series.length-1]||0; return L; }
 function isOn(c){ if(!live||!live.online||!live.onlineAt||Date.now()-live.onlineAt>5*60000) return null; return live.online.some(n=>n.toLowerCase()===c.name.toLowerCase()); }
 function status(c){
   const g=c.gain||{}, L=lv(c);
@@ -207,7 +207,8 @@ function render(){
   if(!data) return;
   $("upd").textContent=(live&&live.updated?"Ao vivo: "+hhmm(live.updated)+" · ":"")+"Coleta geral: "+hhmm(data.updated)+" · "+data.chars.length+" personagens";
   const xp=(c,k)=>(c.gain&&c.gain[k])||0;
-  const list=data.chars.filter(c=>!query||c.name.toLowerCase().includes(query)).sort((a,b)=>((tagOf(b)==="PRIORIDADE")-(tagOf(a)==="PRIORIDADE"))||((a.missing||a.error?1:0)-(b.missing||b.error?1:0))||xp(b,"60")-xp(a,"60")||xp(b,"180")-xp(a,"180")||((isOn(b)?1:0)-(isOn(a)?1:0))||(status(b)[2]-status(a)[2]));
+  const lx=(c,k)=>{const L=lv(c); if(!L) return 0; if(k==="g1") return L.g1!=null?L.g1:(L.series&&L.series.length?L.series[L.series.length-1]:0)||0; return L[k]||0;};
+  const list=data.chars.filter(c=>!query||c.name.toLowerCase().includes(query)).sort((a,b)=>((tagOf(b)==="PRIORIDADE")-(tagOf(a)==="PRIORIDADE"))||((a.missing||a.error?1:0)-(b.missing||b.error?1:0))||lx(b,"g1")-lx(a,"g1")||lx(b,"g5")-lx(a,"g5")||lx(b,"g15")-lx(a,"g15")||xp(b,"60")-xp(a,"60")||xp(b,"180")-xp(a,"180")||((isOn(b)?1:0)-(isOn(a)?1:0)));
   const box=$("list"); box.replaceChildren();
   if(!list.length){const e=el("div","empty"); e.append(el("b",null,query?"Ninguém com esse nome no radar":"Radar vazio"), document.createTextNode(query?"Confira o nome digitado.":"Nenhum personagem na lista do radar ainda.")); box.append(e); return;}
   for(const c of list) box.append(card(c));
