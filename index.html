@@ -83,7 +83,7 @@ footer a{color:var(--muted)}
       <a class="by" href="https://www.twitch.tv/elmago21" target="_blank" rel="noopener">twitch.tv/elmago21</a>
     </div>
     <div class="tabs" role="group" aria-label="Janela de tempo" id="tabs">
-      <button data-m="1">1min</button><button data-m="5">5min</button><button data-m="10">10min</button><button data-m="30">30min</button><button data-m="60">1h</button><button data-m="180">3h</button><button data-m="360">6h</button><button data-m="720">12h</button><button data-m="1440">24h</button>
+      <button data-m="5">5min</button><button data-m="10">10min</button><button data-m="30">30min</button><button data-m="60">1h</button><button data-m="180">3h</button><button data-m="360">6h</button><button data-m="720">12h</button><button data-m="1440">24h</button>
     </div>
   </header>
 
@@ -127,7 +127,7 @@ const LIVE="https://quiet-sea-5869.saviocardoso76-79e.workers.dev/todos?m=";
 let data=null, win=60, query="", order="desc", onlineSet=null, onlyOn=false;
 const ONLINE_URL="https://quiet-sea-5869.saviocardoso76-79e.workers.dev/online";
 const live={};
-try{const m=+localStorage.getItem("pg-m"); if(m) win=m;}catch(e){}
+try{const m=+localStorage.getItem("pg-m"); if(m) win=m; if(win<5) win=5;}catch(e){}
 
 function setTabs(){
   document.querySelectorAll("#tabs button").forEach(b=>{
