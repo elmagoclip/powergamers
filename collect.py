@@ -85,7 +85,7 @@ def main():
             b = base["x"].get(cid)
             if not b:
                 continue
-            gain = xp - b[0]
+            gain = xp // 1000 * 1000 - b[0] // 1000 * 1000  # o olden74 agora arredonda o XP para o milhar
             if gain <= 0:
                 continue
             name, voc = chars.get(cid, [0, 0, 0, "?"])[3], chars.get(cid, [0, 0, 0, "?"])[2]
@@ -113,7 +113,7 @@ def gain_since(hist, cid, minutes, now):
     base = next((h for h in hist if h["t"] >= now - minutes * 60000 - tol and h is not latest), None)
     if base is None or cid not in latest["x"] or cid not in base["x"]:
         return None
-    return latest["x"][cid][0] - base["x"][cid][0]
+    return latest["x"][cid][0] // 1000 * 1000 - base["x"][cid][0] // 1000 * 1000  # XP agora vem arredondado para o milhar
 
 
 def write_radar(hist, now):
