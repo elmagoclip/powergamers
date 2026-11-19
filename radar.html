@@ -150,18 +150,19 @@ function isOn(c){ if(!live||!live.online||!live.onlineAt||Date.now()-live.online
 // O olden74 passou a arredondar o XP para o milhar: o "ritmo" mede o XP/h pelo tempo entre cada milhar ganho.
 function ritmo(c){ const L=lv(c); if(!L||!L.series||!L.series.length) return null;
   const s=L.series, idx=[]; s.forEach((v,i)=>{ if(v>0) idx.push(i); });
-  if(!idx.length) return {last:null, ph:0};
+  if(!idx.length){ const g=c.gain||{}; return {last:null, ph:g["60"]>0?g["60"]:(g["30"]>0?g["30"]*2:0)}; }
   const last=s.length-1-idx[idx.length-1];
-  let ph=0;
-  if(idx.length>=3 && idx[idx.length-1]-idx[0]>=3){ const tot=idx.slice(1).reduce((a,i)=>a+s[i],0); ph=Math.round(tot/(idx[idx.length-1]-idx[0])*60); }
+  const g=c.gain||{};
+  const ph=g["60"]>0?g["60"]:(g["30"]>0?g["30"]*2:0);
   return {last, ph};
 }
 function kfmt(v){ return v>=1000? Math.round(v/1000)+"k" : String(v); }
 function hscore(c){ try{ return (c.missing||c.error)?0:status(c)[2]; }catch(e){ return 0; } }
 function status(c){
   const g=c.gain||{}, L=lv(c), R=ritmo(c);
-  if(R&&R.last!==null&&R.last<=3) return ["p-hunt","🟢 CAÇANDO AGORA"+(R.ph?" · ~"+kfmt(R.ph)+"/h":""),5];
-  if(R&&R.last!==null&&R.last<=10) return ["p-hunt","Caçando · último XP há "+R.last+" min"+(R.ph?" · ~"+kfmt(R.ph)+"/h":""),4];
+  // o servidor só grava o XP de tempos em tempos (save), então "caçando" = XP subiu num dos últimos saves
+  if(R&&R.last!==null&&R.last<=18&&isOn(c)!==false) return ["p-hunt","🟢 CAÇANDO · XP subiu há "+(R.last<1?"menos de 1":R.last)+" min"+(R.ph?" · ~"+kfmt(R.ph)+"/h":""),5];
+  if((c.gain||{})["30"]>0&&isOn(c)!==false) return ["p-hunt","🟢 CAÇANDO · ganhou XP nos últimos 30 min"+(R&&R.ph?" · ~"+kfmt(R.ph)+"/h":""),4];
   if(L&&L.g5>0) return ["p-hunt","Caçou nos últimos 5 min",3];
   if(isOn(c)===false){ const dd=deathsOf(c)[0]; if(dd&&c.lastlogin&&dd.t>=c.lastlogin) return ["p-idle","Saiu · morreu "+ago(dd.t),0]; return ["p-idle","Offline",0]; }
   if(g["10"]>0) return ["p-hunt","Caçando agora",3];
@@ -224,7 +225,7 @@ function render(){
   const box=$("list"); box.replaceChildren();
   let hb=$("hunters"); if(!hb){ hb=el("div","hunters"); hb.id="hunters"; hb.style.cssText="margin:0 0 14px;padding:12px 14px;border:2px solid #2ecc71;border-radius:12px;background:rgba(46,204,113,.10);font-weight:600;line-height:1.5"; box.parentNode.insertBefore(hb, box); }
   const hs=data.chars.filter(c=>hscore(c)>=4).map(c=>{const R=ritmo(c); return c.name+(R&&R.ph?" (~"+kfmt(R.ph)+"/h)":"");});
-  hb.textContent = hs.length ? "🟢 Caçando agora ("+hs.length+"): "+hs.join(" · ") : "Ninguém do radar caçando agora (sem XP nos últimos 10 min).";
+  hb.title="O Olden 74 só atualiza o XP no save do servidor (a cada alguns minutos) e de 1.000 em 1.000. Por isso o aviso pode levar alguns minutos para aparecer."; hb.textContent = hs.length ? "🟢 Caçando agora ("+hs.length+"): "+hs.join(" · ") : "Ninguém do radar caçando agora (sem XP nos últimos 30 min).";
   if(!list.length){const e=el("div","empty"); e.append(el("b",null,query?"Ninguém com esse nome no radar":"Radar vazio"), document.createTextNode(query?"Confira o nome digitado.":"Nenhum personagem na lista do radar ainda.")); box.append(e); return;}
   for(const c of list) box.append(card(c));
 }
