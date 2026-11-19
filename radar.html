@@ -147,15 +147,27 @@ $("q").addEventListener("input",e=>{query=e.target.value.trim().toLowerCase();re
 function el(tag,cls,text){const e=document.createElement(tag); if(cls)e.className=cls; if(text!=null)e.textContent=text; return e;}
 function lv(c){ const L=live&&live.chars&&live.chars[c.name]; if(L&&L.g1==null&&L.series&&L.series.length) L.g1=L.series[L.series.length-1]||0; return L; }
 function isOn(c){ if(!live||!live.online||!live.onlineAt||Date.now()-live.onlineAt>5*60000) return null; return live.online.some(n=>n.toLowerCase()===c.name.toLowerCase()); }
+// O olden74 passou a arredondar o XP para o milhar: o "ritmo" mede o XP/h pelo tempo entre cada milhar ganho.
+function ritmo(c){ const L=lv(c); if(!L||!L.series||!L.series.length) return null;
+  const s=L.series, idx=[]; s.forEach((v,i)=>{ if(v>0) idx.push(i); });
+  if(!idx.length) return {last:null, ph:0};
+  const last=s.length-1-idx[idx.length-1];
+  let ph=0;
+  if(idx.length>=3 && idx[idx.length-1]-idx[0]>=3){ const tot=idx.slice(1).reduce((a,i)=>a+s[i],0); ph=Math.round(tot/(idx[idx.length-1]-idx[0])*60); }
+  return {last, ph};
+}
+function kfmt(v){ return v>=1000? Math.round(v/1000)+"k" : String(v); }
+function hscore(c){ try{ return (c.missing||c.error)?0:status(c)[2]; }catch(e){ return 0; } }
 function status(c){
-  const g=c.gain||{}, L=lv(c);
-  if(L&&L.g1>0) return ["p-hunt","Caçando agora · XP no último minuto",4];
+  const g=c.gain||{}, L=lv(c), R=ritmo(c);
+  if(R&&R.last!==null&&R.last<=3) return ["p-hunt","🟢 CAÇANDO AGORA"+(R.ph?" · ~"+kfmt(R.ph)+"/h":""),5];
+  if(R&&R.last!==null&&R.last<=10) return ["p-hunt","Caçando · último XP há "+R.last+" min"+(R.ph?" · ~"+kfmt(R.ph)+"/h":""),4];
   if(L&&L.g5>0) return ["p-hunt","Caçou nos últimos 5 min",3];
   if(isOn(c)===false){ const dd=deathsOf(c)[0]; if(dd&&c.lastlogin&&dd.t>=c.lastlogin) return ["p-idle","Saiu · morreu "+ago(dd.t),0]; return ["p-idle","Offline",0]; }
   if(g["10"]>0) return ["p-hunt","Caçando agora",3];
   if(g["30"]>0) return ["p-recent","Ganhou XP nos últimos 30 min",2];
   if(c.lastlogin && Date.now()-c.lastlogin<90*60000) return ["p-recent","Logou "+ago(c.lastlogin),1];
-  return ["p-idle","Sem XP recente",0];
+  return isOn(c)?["p-recent","Online, parado (sem XP há 15+ min)",0]:["p-idle","Sem XP recente",0];
 }
 function card(c){
   const box=el("article","card");
@@ -171,7 +183,7 @@ function card(c){
   const meta=el("div","meta",`Level ${c.level} · ${VOC[c.voc]||""} · mora em ${c.town}${c.guild?" · "+c.guild:""}${c.lastlogin?" · último login "+dm(c.lastlogin):""}`);
   const xp=el("div","xp");
   const L=lv(c);
-  const boxes=[["1 min",L?L.g1:null,true],["5 min",L?L.g5:null,true],["15 min",L?L.g15:null,true],["1h",c.gain&&c.gain["60"],false],["3h",c.gain&&c.gain["180"],false]];
+  const R0=ritmo(c); const boxes=[["/h (ritmo)",R0&&R0.ph?R0.ph:null,true],["5 min",L?L.g5:null,true],["15 min",L?L.g15:null,true],["1h",c.gain&&c.gain["60"],false],["3h",c.gain&&c.gain["180"],false]];
   for(const [l,v,isLive] of boxes){
     const d=el("div",isLive&&v!=null?"live":null); d.append(el("div","k","XP "+l));
     d.append(el("div","v"+(v>0?" pos":""), v==null?"—":(v>0?"+":"")+fmt(v))); xp.append(d);
@@ -208,8 +220,11 @@ function render(){
   $("upd").textContent=(live&&live.updated?"Ao vivo: "+hhmm(live.updated)+" · ":"")+"Coleta geral: "+hhmm(data.updated)+" · "+data.chars.length+" personagens";
   const xp=(c,k)=>(c.gain&&c.gain[k])||0;
   const lx=(c,k)=>{const L=lv(c); if(!L) return 0; if(k==="g1") return L.g1!=null?L.g1:(L.series&&L.series.length?L.series[L.series.length-1]:0)||0; return L[k]||0;};
-  const list=data.chars.filter(c=>!query||c.name.toLowerCase().includes(query)).sort((a,b)=>((tagOf(b)==="PRIORIDADE")-(tagOf(a)==="PRIORIDADE"))||((a.missing||a.error?1:0)-(b.missing||b.error?1:0))||lx(b,"g1")-lx(a,"g1")||lx(b,"g5")-lx(a,"g5")||lx(b,"g15")-lx(a,"g15")||xp(b,"60")-xp(a,"60")||xp(b,"180")-xp(a,"180")||((isOn(b)?1:0)-(isOn(a)?1:0)));
+  const list=data.chars.filter(c=>!query||c.name.toLowerCase().includes(query)).sort((a,b)=>((hscore(b)>=4)-(hscore(a)>=4))||((tagOf(b)==="PRIORIDADE")-(tagOf(a)==="PRIORIDADE"))||((a.missing||a.error?1:0)-(b.missing||b.error?1:0))||lx(b,"g1")-lx(a,"g1")||lx(b,"g5")-lx(a,"g5")||lx(b,"g15")-lx(a,"g15")||xp(b,"60")-xp(a,"60")||xp(b,"180")-xp(a,"180")||((isOn(b)?1:0)-(isOn(a)?1:0)));
   const box=$("list"); box.replaceChildren();
+  let hb=$("hunters"); if(!hb){ hb=el("div","hunters"); hb.id="hunters"; hb.style.cssText="margin:0 0 14px;padding:12px 14px;border:2px solid #2ecc71;border-radius:12px;background:rgba(46,204,113,.10);font-weight:600;line-height:1.5"; box.parentNode.insertBefore(hb, box); }
+  const hs=data.chars.filter(c=>hscore(c)>=4).map(c=>{const R=ritmo(c); return c.name+(R&&R.ph?" (~"+kfmt(R.ph)+"/h)":"");});
+  hb.textContent = hs.length ? "🟢 Caçando agora ("+hs.length+"): "+hs.join(" · ") : "Ninguém do radar caçando agora (sem XP nos últimos 10 min).";
   if(!list.length){const e=el("div","empty"); e.append(el("b",null,query?"Ninguém com esse nome no radar":"Radar vazio"), document.createTextNode(query?"Confira o nome digitado.":"Nenhum personagem na lista do radar ainda.")); box.append(e); return;}
   for(const c of list) box.append(card(c));
 }
