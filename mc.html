@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Caçador de MC · Olden 74</title>
+<meta name="description" content="Aponta personagens que entram, saem e upam juntos no Olden 74: suspeitos de multi-client. Por twitch.tv/elmago21.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+:root{
+  --bg:#f3f1ec; --panel:#ffffff; --fg:#1d1a16; --muted:#6f685d; --line:#e2ddd2;
+  --accent:#b8860b; --accent-ink:#ffffff; --good:#2f7d4a; --bad:#b03a2e; --bad-bg:#f7e1de; --twitch:#9146ff;
+  --display:"Space Grotesk",system-ui,sans-serif; --body:"Inter",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#14120f; --panel:#1d1a16; --fg:#efe9dd; --muted:#a39a8a; --line:#2f2a23;
+  --accent:#e0b23a; --accent-ink:#1a1408; --good:#6cc48a; --bad:#ef7b6e; --bad-bg:#3a1c18; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45}
+.wrap{max-width:920px;margin:0 auto;padding:28px 16px 48px;display:flex;flex-direction:column;gap:18px}
+nav{display:flex;flex-wrap:wrap;gap:8px}
+nav a{font-weight:600;font-size:14px;color:var(--fg);text-decoration:none;padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:var(--panel)}
+nav a[aria-current="page"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--display);font-size:clamp(28px,5vw,40px);line-height:1.05;margin:4px 0 0}
+h2{font-family:var(--display);font-size:20px;margin:0}
+.lead{color:var(--muted);max-width:68ch;margin:6px 0 0}
+.by{display:inline-flex;margin-top:8px;font-size:13px;font-weight:600;color:#fff;background:var(--twitch);padding:4px 10px;border-radius:999px;text-decoration:none}
+.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.stat .k{font-size:12px;color:var(--muted)}
+.stat .v{font-family:var(--mono);font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+input[type=search]{font:15px var(--body);color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 12px;width:min(320px,100%)}
+button{font:600 14px var(--body);color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 12px;cursor:pointer}
+.note{font-size:13px;color:var(--muted)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.card.hot{border-color:var(--bad);background:linear-gradient(0deg,var(--panel),var(--panel)),var(--bad-bg)}
+.chars{display:flex;flex-wrap:wrap;gap:8px}
+.ch{border:1px solid var(--line);border-radius:8px;padding:4px 10px;font-weight:600}
+.ch small{font-weight:400;color:var(--muted);margin-left:6px}
+.ch.on{border-color:var(--good)}
+.ev{font-family:var(--mono);font-size:13px;color:var(--muted)}
+.score{font-family:var(--mono);font-weight:700;color:var(--bad)}
+.empty{background:var(--panel);border:1px dashed var(--line);border-radius:12px;padding:22px;color:var(--muted);text-align:center}
+.empty b{display:block;color:var(--fg);margin-bottom:4px}
+.pulse{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--good);margin-right:6px;animation:p 1.6s infinite}
+@keyframes p{50%{opacity:.25}}
+footer{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav aria-label="Páginas"><a href="./">Quem mais fez XP</a><a href="radar.html">Radar de hunteds</a><a href="online.html">Quem está online</a><a href="mortes.html">Últimas mortes</a><a href="exiva.html">Mapa do exiva</a><a href="mc.html" aria-current="page">Caçador de MC</a></nav>
+  <header>
+    <div class="eyebrow">Olden 74 · multi-client</div>
+    <h1>Caçador de MC</h1>
+    <p class="lead">Um robô olha a lista de online do Olden 74 <b>a cada minuto, 24 horas por dia</b>, e anota quem <b>entra, sai e upa no mesmo minuto</b>. Quando dois ou mais chars fazem isso juntos várias vezes, provavelmente é a mesma pessoa jogando com mais de um personagem (MC) ou um maker. Não precisa deixar a página aberta. É suspeita, não prova: dupla que sempre joga junta também pode aparecer.</p>
+    <a class="by" href="https://www.twitch.tv/elmago21" target="_blank" rel="noopener">twitch.tv/elmago21</a>
+  </header>
+  <section class="strip">
+    <div class="stat"><div class="k">Observando há</div><div class="v" id="s-time">—</div></div>
+    <div class="stat"><div class="k">Leituras da lista</div><div class="v" id="s-snaps">—</div></div>
+    <div class="stat"><div class="k">Entradas/saídas anotadas</div><div class="v" id="s-ev">—</div></div>
+    <div class="stat"><div class="k">Grupos suspeitos</div><div class="v" id="s-sus">—</div></div>
+  </section>
+  <div class="bar">
+    <input type="search" id="q" placeholder="Filtrar por nome de char…" aria-label="Buscar personagem" autocomplete="off">
+    <div class="note" id="status"><span class="pulse"></span>Conectando…</div>
+  </div>
+  <section style="display:flex;flex-direction:column;gap:10px">
+    <h2>Seus hunteds: markers e MC</h2>
+    <p class="note" style="margin:0">Só os chars da sua hunted list. O robô guarda <b>14 dias</b> de histórico deles (os outros só 3), então quanto mais tempo passa, mais certinho fica. Atualiza a cada 5 minutos.</p>
+    <div id="hl" style="display:flex;flex-direction:column;gap:10px"><p class="note">Carregando…</p></div>
+  </section>
+  <section class="card" id="mk">
+    <h2>Descobrir marker / MC de um char</h2>
+    <p class="note" style="margin:0">Digita o nome do cara e o robô mostra com quem ele mais entra, sai e upa junto. Char de level baixo que anda colado nele é <b>possível marker</b>.</p>
+    <form id="mkf" class="bar" style="justify-content:flex-start">
+      <input type="search" id="mkq" placeholder="Nome do char (ex: Ander)" aria-label="Nome do char para investigar" autocomplete="off">
+      <button type="submit">Investigar</button>
+    </form>
+    <div id="mkr"></div>
+  </section>
+  <h2>Suspeitos de MC</h2>
+  <section id="list" style="display:flex;flex-direction:column;gap:12px"></section>
+  <div class="bar">
+    <span class="note">Considera os últimos 3 dias de atividade. Logins em massa, tipo depois do server save, são ignorados. O resultado atualiza a cada 5 minutos.</span>
+  </div>
+  <footer>Dados da lista de online do Olden 74, lidos a cada minuto por um robô na Cloudflare.</footer>
+</div>
+<script>
+const MC="https://mc-olden.saviocardoso76-79e.workers.dev/mc";
+const ONLINE="https://quiet-sea-5869.saviocardoso76-79e.workers.dev/online";
+const VOC={0:"Sem voc.",1:"Sorcerer",2:"Druid",3:"Paladin",4:"Knight",5:"Master Sorcerer",6:"Elder Druid",7:"Royal Paladin",8:"Elite Knight"};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let data=null, online=new Set(), q="";
+const hhmm=t=>new Date(t).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+function chip(c){ const [n,lv,v]=c; const meta=[lv!=null?"lv "+lv:"", v!=null?VOC[v]||"":""].filter(Boolean).join(" · ");
+  return `<span class="ch ${online.has(n)?"on":""}" title="${online.has(n)?"online agora":"offline"}">${esc(n)}<small>${esc(meta)}</small></span>`; }
+function render(){
+  if(!data) return;
+  const hrs=data.since&&data.updated?(data.updated-data.since)/3600e3:0;
+  $("s-time").textContent=hrs<1?Math.round(hrs*60)+" min":hrs<48?hrs.toFixed(1)+" h":(hrs/24).toFixed(1)+" dias";
+  $("s-snaps").textContent=(data.reads||0).toLocaleString("pt-BR");
+  $("s-ev").textContent=(data.events||0).toLocaleString("pt-BR");
+  const hasH=g=>g.m.some(c=>hset.has(c[0].toLowerCase()));
+  const gs=(data.groups||[]).filter(g=>!q||g.m.some(c=>c[0].toLowerCase().includes(q))).sort((a,b)=>hasH(b)-hasH(a));
+  $("s-sus").textContent=(data.groups||[]).length;
+  $("status").innerHTML=data.updated?`<span class="pulse"></span>Robô ativo · resultado de ${hhmm(data.updated)} · ${online.size} online agora`:"Robô começando a coletar…";
+  if(!gs.length){
+    $("list").innerHTML=`<div class="empty"><b>${q?"Nenhum suspeito com esse nome":hrs<2?"Coletando dados…":"Nenhum suspeito forte ainda"}</b>${q?"Confira o nome digitado.":"Precisa ver o mesmo grupo entrar, sair ou upar junto pelo menos 4 vezes. Volte daqui a algumas horas."}</div>`;
+    return;
+  }
+  $("list").innerHTML=gs.map(g=>`<div class="card ${g.best>=0.85&&g.ev>=6?"hot":""}">
+      <div class="chars">${g.m.map(chip).join("")}</div>
+      <div class="ev"><span class="score">${Math.round(g.best*100)}% juntos</span> · entraram juntos ${g.c.j}x · saíram juntos ${g.c.l}x · upou junto ${g.c.u}x</div></div>`).join("");
+}
+async function load(){
+  try{ const r=await fetch(MC,{cache:"no-store"}); if(r.ok){ data=await r.json(); } }catch(e){}
+  try{ const r=await fetch(ONLINE,{cache:"no-store"}); if(r.ok){ const d=await r.json(); online=new Set((d.chars&&d.chars.length?d.chars.map(c=>c[0]):(d.names||[]))); } }catch(e){}
+  if(!data) $("status").textContent="Não consegui ler o resultado agora. Tentando de novo…";
+  render();
+}
+const HUNTED="https://mc-olden.saviocardoso76-79e.workers.dev/hunted";
+let hset=new Set();
+const lvl=(p,me)=>p.score>=0.5&&p.n>=3&&p.lvl!=null&&(p.lvl<=20||(me&&p.lvl<=me*0.6));
+function conf(p){ return p.n>=8&&p.score>=0.8?["forte","var(--bad)"]:p.n>=4&&p.score>=0.6?["suspeito","#c77d0a"]:["pouca prova","var(--muted)"]; }
+function prow(p,me){
+  const mk=lvl(p,me), mc=!mk&&p.score>=0.6&&p.n>=4, [cl,cc]=conf(p);
+  const tag=mk?'<span class="ch" style="background:var(--bad);color:#fff;border-color:var(--bad)">🎯 possível marker</span>':mc?'<span class="ch" style="border-color:var(--bad);color:var(--bad)">possível MC</span>':"";
+  const ht=p.hunted?'<span class="ch" style="border-color:var(--accent);color:var(--accent)">também hunted</span>':"";
+  return `<div class="ev" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">${chip([p.name,p.lvl,p.voc])}<span class="score">${Math.round(p.score*100)}% juntos</span> ${p.n}x juntos (entrou ${p.j} · saiu ${p.l} · upou ${p.u}) <b style="color:${cc}">${cl}</b> ${tag}${ht}</div>`;
+}
+async function loadHunted(){
+  let d=null; try{ const r=await fetch(HUNTED,{cache:"no-store"}); d=await r.json(); }catch(e){}
+  if(!d||!d.updated){ $("hl").innerHTML='<div class="empty"><b>Começando a juntar dados dos hunteds…</b>Volte daqui uns minutos.</div>'; return; }
+  hset=new Set((d.hunt||[]).map(x=>x.toLowerCase()));
+  const key=e=>Math.max(0,...e.partners.map(p=>p.score*Math.min(p.n,8)));
+  const L=(d.list||[]).filter(e=>e.partners.length).sort((a,b)=>key(b)-key(a));
+  const semDado=(d.hunt||[]).length-L.length;
+  $("hl").innerHTML=(L.length?L.map(e=>`<div class="card ${e.partners.some(p=>p.n>=8&&p.score>=0.8)?"hot":""}">
+    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center"><span class="ch" style="border-color:var(--accent)">🎯 ${esc(e.name)}<small>${e.lvl!=null?"lv "+e.lvl:""} ${VOC[e.voc]||""}</small></span><span class="note">${online.has(e.name)?"🟢 online":"offline"} · ${e.n} entradas/saídas anotadas</span></div>
+    ${e.partners.map(p=>prow(p,e.lvl)).join("")}</div>`).join(""):'<div class="empty"><b>Nenhum hunted com parceiro ainda</b>Precisa eles logarem/deslogarem algumas vezes.</div>')
+    +(semDado>0?`<p class="note">${semDado} hunteds ainda sem ninguém andando junto (ou não logaram desde que o robô começou).</p>`:"");
+  if(data) render();
+}
+const CHAR="https://mc-olden.saviocardoso76-79e.workers.dev/char?n=";
+$("mkf").addEventListener("submit",async e=>{
+  e.preventDefault(); const n=$("mkq").value.trim(); if(!n) return;
+  $("mkr").innerHTML='<p class="note">Procurando…</p>';
+  let d=null; try{ const r=await fetch(CHAR+encodeURIComponent(n)); d=await r.json(); }catch(err){}
+  if(!d||d.error||!d.name){ $("mkr").innerHTML=`<div class="empty"><b>Não achei "${esc(n)}"</b>O robô só conhece quem entrou ou saiu desde que ele começou. Confira o nome ou tente mais tarde.</div>`; return; }
+  const ps=(d.partners||[]).filter(p=>p.n>=2).sort((a,b)=>(b.score*Math.min(b.n,6))-(a.score*Math.min(a.n,6)));
+  const head=`<p style="margin:0"><b>${esc(d.name)}</b> <span class="note">${d.lvl?"lv "+d.lvl:""} ${VOC[d.voc]||""} · ${online.has(d.name)?"🟢 online":"offline"} · ${d.n} entradas/saídas anotadas</span></p>`;
+  if(!ps.length){ $("mkr").innerHTML=head+`<p class="note">Ainda ninguém andando junto com ele. Volte daqui umas horas.</p>`; return; }
+  $("mkr").innerHTML=head+`<div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">`+ps.map(p=>{
+    const mk=p.score>=0.5&&p.n>=3&&p.lvl!=null&&(p.lvl<=20||(d.lvl&&p.lvl<=d.lvl*0.6));
+    const mc=!mk&&p.score>=0.6&&p.n>=4;
+    const tag=mk?'<span class="ch" style="background:var(--bad);color:#fff;border-color:var(--bad)">🎯 possível marker</span>':mc?'<span class="ch" style="border-color:var(--bad);color:var(--bad)">possível MC</span>':"";
+    return `<div class="ev" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">${chip([p.name,p.lvl,p.voc])}<span class="score">${Math.round(p.score*100)}% juntos</span> entrou ${p.j}x · saiu ${p.l}x · upou ${p.u}x ${tag}</div>`;
+  }).join("")+`</div><p class="note">% juntos = das vezes que um dos dois logou/deslogou, quantas foram no mesmo minuto. Quanto mais vezes, mais certeza.</p>`;
+});
+$("q").addEventListener("input",e=>{q=e.target.value.trim().toLowerCase(); render();});
+load().then(loadHunted); setInterval(load,60000);
+setInterval(loadHunted,120000);
+</script>
+</body>
+</html>

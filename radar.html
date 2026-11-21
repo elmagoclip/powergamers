@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Radar de Hunteds · Olden 74</title>
+<meta name="description" content="Quem está caçando agora, último login, mortes e frags dos hunteds no Olden 74. Por twitch.tv/elmago21.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: lista de fichas de personagem, ativos primeiro; cada ficha = status, XP recente, última morte e frags */
+:root{
+  --bg:#f3f1ec; --panel:#ffffff; --fg:#1d1a16; --muted:#6f685d; --line:#e2ddd2;
+  --accent:#b8860b; --accent-ink:#ffffff; --good:#2f7d4a; --good-bg:#e3f2e7; --warn:#9a6a00; --warn-bg:#fbf0d3;
+  --bad:#b03a2e; --idle-bg:#ece8e0; --twitch:#9146ff;
+  --display:"Space Grotesk",system-ui,sans-serif; --body:"Inter",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#14120f; --panel:#1d1a16; --fg:#efe9dd; --muted:#a39a8a; --line:#2f2a23;
+  --accent:#e0b23a; --accent-ink:#1a1408; --good:#6cc48a; --good-bg:#16301f; --warn:#e3b54a; --warn-bg:#352a10;
+  --bad:#ef7b6e; --idle-bg:#26221c; color-scheme:dark}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45}
+.wrap{max-width:920px;margin:0 auto;padding-block:28px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:18px}
+nav{display:flex;flex-wrap:wrap;gap:8px}
+nav a{font-weight:600;font-size:14px;color:var(--fg);text-decoration:none;padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:var(--panel)}
+nav a[aria-current="page"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--display);font-size:clamp(28px,5vw,40px);line-height:1.05;margin:4px 0 0;text-wrap:balance}
+.lead{color:var(--muted);max-width:65ch;margin:6px 0 0}
+.by{display:inline-flex;margin-top:8px;font-size:13px;font-weight:600;color:#fff;background:var(--twitch);padding:4px 10px;border-radius:999px;text-decoration:none}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+input[type=search]{font:15px var(--body);color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 12px;width:min(320px,100%)}
+.note{font-size:13px;color:var(--muted)}
+.list{display:flex;flex-direction:column;gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:12px 20px}
+@media (max-width:640px){.card{grid-template-columns:minmax(0,1fr)}}
+.head{display:flex;flex-direction:column;gap:6px;min-width:0}
+.name{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.name a{font-family:var(--display);font-weight:700;font-size:20px;color:var(--fg);text-decoration:none}
+.name a:hover{text-decoration:underline}
+.pill{font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.p-hunt{background:var(--good-bg);color:var(--good)}
+.p-recent{background:var(--warn-bg);color:var(--warn)}
+.p-idle{background:var(--idle-bg);color:var(--muted)}
+.on{font-size:11px;font-weight:800;letter-spacing:.06em;padding:3px 8px;border-radius:999px;display:inline-flex;align-items:center;gap:5px}
+.on::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.on-y{background:var(--good-bg);color:var(--good)}
+.on-n{background:var(--idle-bg);color:var(--muted)}
+.meta{font-size:13px;color:var(--muted)}
+.xp{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:4px}
+@media (max-width:420px){.xp{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.xp div.live{outline:1px solid var(--good);outline-offset:-1px}
+.spark{display:flex;align-items:flex-end;gap:2px;height:28px;margin-top:6px}
+.spark i{flex:1;min-width:2px;background:var(--good);border-radius:2px 2px 0 0;opacity:.85}
+.spark i.z{background:var(--line);height:2px!important}
+.sparkcap{font-size:11px;color:var(--muted)}
+.xp div{background:var(--bg);border-radius:8px;padding:6px 8px;min-width:0}
+.xp .k{font-size:11px;color:var(--muted)}
+.xp .v{font-family:var(--mono);font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.xp .v.pos{color:var(--good)}
+.side{display:flex;flex-direction:column;gap:8px;min-width:0;font-size:13px}
+.side h3{margin:0;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.side ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:3px}
+.side li{overflow-wrap:anywhere}
+.side time{font-family:var(--mono);color:var(--muted);font-size:12px;margin-right:6px}
+.mon{font-weight:600}
+.pl{font-weight:600;color:var(--bad)}
+.empty{padding:40px 20px;text-align:center;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:12px}
+.empty b{color:var(--fg);display:block;font-family:var(--display);font-size:20px;margin-bottom:6px}
+.alerts{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.al-head{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.al-head strong{font-family:var(--display);font-size:16px}
+#al-btn{font:700 14px var(--body);border:0;border-radius:8px;padding:8px 14px;cursor:pointer;background:var(--accent);color:var(--accent-ink)}
+#al-btn.al-active{background:var(--idle-bg);color:var(--fg)}
+.al-opts{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;font-size:14px}
+.al-opts label{display:inline-flex;gap:6px;align-items:center;cursor:pointer}
+.al-opts .link{font:600 13px var(--body);background:none;border:0;color:var(--accent);cursor:pointer;padding:0;text-decoration:underline}
+.al-log{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px;font-size:13px}
+.al-log li{padding:6px 10px;border-radius:8px;background:var(--bg);overflow-wrap:anywhere}
+.al-log time{font-family:var(--mono);color:var(--muted);margin-right:8px}
+.al-log .al-death{background:color-mix(in srgb,var(--bad) 14%,transparent)}
+.al-log .al-level{background:var(--warn-bg)}
+.al-log .al-hunt,.al-log .al-login{background:var(--good-bg)}
+#al-btn:focus-visible,.al-opts input:focus-visible,.al-opts .link:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tag-mk{font-size:11px;font-weight:800;letter-spacing:.06em;padding:3px 8px;border-radius:999px;background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn)}
+.card.mk{border-color:var(--warn);box-shadow:inset 4px 0 0 var(--warn)}
+footer{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:6px}
+footer a{color:var(--muted)}
+a:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav aria-label="Páginas"><a href="./">Quem mais fez XP</a><a href="radar.html" aria-current="page">Radar de hunteds</a><a href="online.html">Quem está online</a><a href="mortes.html">Últimas mortes</a><a href="exiva.html">Mapa do exiva</a></nav>
+  <header>
+    <div class="eyebrow">Olden 74 · 7.4 · 1x PvP</div>
+    <h1>Radar de hunteds</h1>
+    <p class="lead">Quem está ganhando XP agora, quando logou, onde morreu por último e quem matou. Os dados vêm do site oficial do Olden 74 e se atualizam minuto a minuto.</p>
+    <a class="by" href="https://www.twitch.tv/elmago21" target="_blank" rel="noopener">twitch.tv/elmago21</a>
+  </header>
+  <section class="alerts" aria-label="Alertas dos hunteds">
+    <div class="al-head">
+      <div><strong>Alertas dos hunteds</strong><span class="note" id="al-status"></span></div>
+      <button type="button" id="al-btn">Ligar alertas</button>
+    </div>
+    <div class="al-opts" id="al-opts">
+      <label><input type="checkbox" data-k="login"> Logou</label>
+      <label><input type="checkbox" data-k="hunt"> Começou a caçar</label>
+      <label><input type="checkbox" data-k="level"> Upou level</label>
+      <label><input type="checkbox" data-k="death"> Morreu</label>
+      <button type="button" id="al-test" class="link">Testar som</button>
+    </div>
+    <ul class="al-log" id="al-log" hidden></ul>
+  </section>
+  <div class="bar">
+    <input type="search" id="q" placeholder="Filtrar por nome…" aria-label="Filtrar por nome" autocomplete="off">
+    <span class="note" id="upd"></span>
+  </div>
+  <div class="list" id="list"><div class="empty"><b>Carregando o radar…</b>Buscando a última coleta.</div></div>
+  <footer>
+    <span>ONLINE/OFFLINE vem da lista pública de quem está online no olden74.com (atualizada a cada minuto). "Caçando agora" = ganhou XP no último minuto (o XP de 1, 5 e 15 min é medido minuto a minuto). O site do Olden 74 não mostra a posição de ninguém no mapa: as mortes recentes para monstros indicam onde o char costuma caçar.</span>
+    <span>Site não oficial, sem ligação com a equipe do Olden 74.</span>
+  </footer>
+</div>
+<script>
+const VOC={0:"Sem vocação",1:"Sorcerer",2:"Druid",3:"Paladin",4:"Knight",5:"Master Sorcerer",6:"Elder Druid",7:"Royal Paladin",8:"Elite Knight"};
+const $=id=>document.getElementById(id);
+const fmt=n=>n.toLocaleString("pt-BR");
+const hhmm=t=>new Date(t).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+const dm=t=>new Date(t).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
+function ago(t){const m=Math.max(0,Math.round((Date.now()-t)/60000)); if(m<60)return `há ${m} min`; const h=Math.round(m/60); if(h<48)return `há ${h}h`; return `há ${Math.round(h/24)} dias`;}
+const LIVE="https://quiet-sea-5869.saviocardoso76-79e.workers.dev/";
+const LIVE_D=LIVE+"mortes";
+let data=null, live=null, liveD=null, query="";
+// etiquetas especiais por hunted (nome em minúsculas: etiqueta)
+const TAGS={"tik tok":"MAKER","eobala gorgoflexx":"MAKER","doente":"MAKER","energy field":"MAKER","tumba gobierno":"MAKER","boss lodz":"MAKER","champurraadoswe":"MAKER","kaneki":"MAKER","nucholito":"MAKER","yeiden":"MAKER","max verstappen":"MAKER","pitu":"MAKER","wicked owns":"MAKER","kick renantny":"MAKER","papacu":"MAKER","lemenskzy":"MAKER","sir medico":"MAKER","cleric of zera":"MAKER","boss zyler":"MAKER","incocessus":"MAKER","olden neetuuh":"MAKER","katia silver ms":"MAKER","leleu":"RED SKULL","awinmawe":"RED SKULL","instiman":"RED SKULL","josh":"RED SKULL","ander":"PRIORIDADE","ander investidor":"MAKER","ander":"PRIORIDADE","ander investidor":"MAKER","zipzap":"MAKER","legend jucada":"PRIORIDADE","rzika":"PRIORIDADE"};
+const tagOf=c=>TAGS[c.name.toLowerCase()];
+// junta as mortes/frags da coleta geral com as mortes ao vivo do server (sem repetir)
+function mergeT(a,b){const seen=new Set(), out=[]; for(const x of [...a,...b]){const k=x.t+"|"+(x.who||x.by); if(seen.has(k)) continue; seen.add(k); out.push(x);} return out.sort((x,y)=>y.t-x.t);}
+function deathsOf(c){ if(!liveD) return c.deaths; const n=c.name.toLowerCase(); return mergeT(liveD.filter(d=>d.name.toLowerCase()===n).map(d=>({t:d.t,lvl:d.lvl,by:d.by,p:d.p,md:d.md,mdp:d.mdp})), c.deaths); }
+function fragsOf(c){ if(!liveD) return c.frags; const n=c.name.toLowerCase(); const f=[]; for(const d of liveD){ const last=d.p&&d.by.toLowerCase()===n, as=d.mdp&&d.md&&d.md.toLowerCase()===n; if(last||as) f.push({t:d.t,who:d.name,lvl:d.lvl,unj:!!(d.unj||d.mdunj),last}); } return mergeT(f, c.frags); }
+$("q").addEventListener("input",e=>{query=e.target.value.trim().toLowerCase();render();});
+function el(tag,cls,text){const e=document.createElement(tag); if(cls)e.className=cls; if(text!=null)e.textContent=text; return e;}
+function lv(c){ const L=live&&live.chars&&live.chars[c.name]; if(L&&L.g1==null&&L.series&&L.series.length) L.g1=L.series[L.series.length-1]||0; return L; }
+function isOn(c){ if(!live||!live.online||!live.onlineAt||Date.now()-live.onlineAt>5*60000) return null; return live.online.some(n=>n.toLowerCase()===c.name.toLowerCase()); }
+// O olden74 passou a arredondar o XP para o milhar: o "ritmo" mede o XP/h pelo tempo entre cada milhar ganho.
+function ritmo(c){ const L=lv(c); if(!L||!L.series||!L.series.length) return null;
+  const s=L.series, idx=[]; s.forEach((v,i)=>{ if(v>0) idx.push(i); });
+  if(!idx.length){ const g=c.gain||{}; return {last:null, ph:g["60"]>0?g["60"]:(g["30"]>0?g["30"]*2:0)}; }
+  const last=s.length-1-idx[idx.length-1];
+  const g=c.gain||{};
+  const ph=g["60"]>0?g["60"]:(g["30"]>0?g["30"]*2:0);
+  return {last, ph};
+}
+function kfmt(v){ return v>=1000? Math.round(v/1000)+"k" : String(v); }
+function hscore(c){ try{ return (c.missing||c.error)?0:status(c)[2]; }catch(e){ return 0; } }
+function status(c){
+  const g=c.gain||{}, L=lv(c), R=ritmo(c);
+  // o servidor só grava o XP de tempos em tempos (save), então "caçando" = XP subiu num dos últimos saves
+  if(R&&R.last!==null&&R.last<=18&&isOn(c)!==false) return ["p-hunt","🟢 CAÇANDO · XP subiu há "+(R.last<1?"menos de 1":R.last)+" min"+(R.ph?" · ~"+kfmt(R.ph)+"/h":""),5];
+  if((c.gain||{})["30"]>0&&isOn(c)!==false) return ["p-hunt","🟢 CAÇANDO · ganhou XP nos últimos 30 min"+(R&&R.ph?" · ~"+kfmt(R.ph)+"/h":""),4];
+  if(L&&L.g5>0) return ["p-hunt","Caçou nos últimos 5 min",3];
+  if(isOn(c)===false){ const dd=deathsOf(c)[0]; if(dd&&c.lastlogin&&dd.t>=c.lastlogin) return ["p-idle","Saiu · morreu "+ago(dd.t),0]; return ["p-idle","Offline",0]; }
+  if(g["10"]>0) return ["p-hunt","Caçando agora",3];
+  if(g["30"]>0) return ["p-recent","Ganhou XP nos últimos 30 min",2];
+  if(c.lastlogin && Date.now()-c.lastlogin<90*60000) return ["p-recent","Logou "+ago(c.lastlogin),1];
+  return isOn(c)?["p-recent","Online, parado (sem XP há 15+ min)",0]:["p-idle","Sem XP recente",0];
+}
+function card(c){
+  const box=el("article","card");
+  if(c.missing||c.error){ box.append(el("div","head")); const h=box.firstChild; const n=el("div","name"); n.append(el("strong",null,c.name)); h.append(n, el("div","meta",c.missing?"Personagem não encontrado no Olden 74. Confira o nome.":"Não consegui ler este personagem nesta coleta.")); return box; }
+  const [cls,txt]=status(c);
+  const head=el("div","head"), name=el("div","name");
+  const a=el("a",null,c.name); a.href="https://olden74.com/personagens/"+encodeURIComponent(c.name); a.target="_blank"; a.rel="noopener";
+  const on=isOn(c);
+  name.append(a);
+  if(tagOf(c)){ name.append(el("span","tag-mk",tagOf(c))); box.classList.add("mk"); if(tagOf(c)==="RED SKULL"){ name.lastChild.style.cssText="background:#7a0b0b;color:#fff;border-color:#ff3b3b"; name.lastChild.textContent="💀 RED SKULL"; } if(tagOf(c)==="PRIORIDADE"){ name.lastChild.style.cssText="background:#c0392b;color:#fff;border-color:#c0392b"; box.style.boxShadow="0 0 0 2px #c0392b"; } }
+  if(on!==null) name.append(el("span","on "+(on?"on-y":"on-n"),on?"ONLINE":"OFFLINE"));
+  name.append(el("span","pill "+cls,txt));
+  const meta=el("div","meta",`Level ${c.level} · ${VOC[c.voc]||""} · mora em ${c.town}${c.guild?" · "+c.guild:""}${c.lastlogin?" · último login "+dm(c.lastlogin):""}`);
+  const xp=el("div","xp");
+  const L=lv(c);
+  const R0=ritmo(c); const boxes=[["/h (ritmo)",R0&&R0.ph?R0.ph:null,true],["5 min",L?L.g5:null,true],["15 min",L?L.g15:null,true],["1h",c.gain&&c.gain["60"],false],["3h",c.gain&&c.gain["180"],false]];
+  for(const [l,v,isLive] of boxes){
+    const d=el("div",isLive&&v!=null?"live":null); d.append(el("div","k","XP "+l));
+    d.append(el("div","v"+(v>0?" pos":""), v==null?"—":(v>0?"+":"")+fmt(v))); xp.append(d);
+  }
+  head.append(name,meta,xp);
+  if(L&&L.series&&L.series.length>1){
+    const ser=L.series.slice(-15), mx=Math.max(1,...ser);
+    const sp=el("div","spark"); sp.setAttribute("role","img"); sp.setAttribute("aria-label","XP por minuto nos últimos "+ser.length+" minutos");
+    for(const v of ser){ const b=el("i",v>0?null:"z"); if(v>0) b.style.height=Math.max(8,Math.round(v/mx*100))+"%"; b.title=fmt(v)+" XP"; sp.append(b); }
+    head.append(sp, el("div","sparkcap",`XP por minuto, últimos ${ser.length} min`));
+  }
+  const side=el("div","side");
+  side.append(el("h3",null,"Últimas mortes"));
+  const ul=el("ul");
+  const DD=deathsOf(c); if(!DD.length) ul.append(el("li",null,"Nenhuma morte registrada."));
+  for(const d of DD.slice(0,3)){
+    const li=el("li"); const tm=el("time",null,ago(d.t)); tm.dateTime=new Date(d.t).toISOString(); li.append(tm);
+    li.append(document.createTextNode(`lvl ${d.lvl} por `)); li.append(el("span",d.p?"pl":"mon",d.by));
+    if(d.md&&d.md!==d.by){li.append(document.createTextNode(" e ")); li.append(el("span",d.mdp?"pl":"mon",d.md));}
+    ul.append(li);
+  }
+  side.append(ul);
+  side.append(el("h3",null,"Frags recentes"));
+  const uf=el("ul");
+  const FF=fragsOf(c); if(!FF.length) uf.append(el("li",null,"Nenhum frag registrado."));
+  for(const f of FF.slice(0,3)){
+    const li=el("li"); li.append(el("time",null,ago(f.t))); li.append(document.createTextNode(`${f.last?"matou":"ajudou a matar"} `)); li.append(el("span","pl",f.who)); li.append(document.createTextNode(` (lvl ${f.lvl})${f.unj?" · injustificada":""}`)); uf.append(li);
+  }
+  side.append(uf);
+  box.append(head,side); return box;
+}
+function render(){
+  if(!data) return;
+  $("upd").textContent=(live&&live.updated?"Ao vivo: "+hhmm(live.updated)+" · ":"")+"Coleta geral: "+hhmm(data.updated)+" · "+data.chars.length+" personagens";
+  const xp=(c,k)=>(c.gain&&c.gain[k])||0;
+  const lx=(c,k)=>{const L=lv(c); if(!L) return 0; if(k==="g1") return L.g1!=null?L.g1:(L.series&&L.series.length?L.series[L.series.length-1]:0)||0; return L[k]||0;};
+  const list=data.chars.filter(c=>!query||c.name.toLowerCase().includes(query)).sort((a,b)=>((hscore(b)>=4)-(hscore(a)>=4))||((tagOf(b)==="PRIORIDADE")-(tagOf(a)==="PRIORIDADE"))||((a.missing||a.error?1:0)-(b.missing||b.error?1:0))||lx(b,"g1")-lx(a,"g1")||lx(b,"g5")-lx(a,"g5")||lx(b,"g15")-lx(a,"g15")||xp(b,"60")-xp(a,"60")||xp(b,"180")-xp(a,"180")||((isOn(b)?1:0)-(isOn(a)?1:0)));
+  const box=$("list"); box.replaceChildren();
+  let hb=$("hunters"); if(!hb){ hb=el("div","hunters"); hb.id="hunters"; hb.style.cssText="margin:0 0 14px;padding:12px 14px;border:2px solid #2ecc71;border-radius:12px;background:rgba(46,204,113,.10);font-weight:600;line-height:1.5"; box.parentNode.insertBefore(hb, box); }
+  const hs=data.chars.filter(c=>hscore(c)>=4).map(c=>{const R=ritmo(c); return c.name+(R&&R.ph?" (~"+kfmt(R.ph)+"/h)":"");});
+  hb.title="O Olden 74 só atualiza o XP no save do servidor (a cada alguns minutos) e de 1.000 em 1.000. Por isso o aviso pode levar alguns minutos para aparecer."; hb.textContent = hs.length ? "🟢 Caçando agora ("+hs.length+"): "+hs.join(" · ") : "Ninguém do radar caçando agora (sem XP nos últimos 30 min).";
+  if(!list.length){const e=el("div","empty"); e.append(el("b",null,query?"Ninguém com esse nome no radar":"Radar vazio"), document.createTextNode(query?"Confira o nome digitado.":"Nenhum personagem na lista do radar ainda.")); box.append(e); return;}
+  for(const c of list) box.append(card(c));
+}
+async function load(){
+  try{ const r=await fetch("radar.json?t="+Date.now(),{cache:"no-store"}); if(!r.ok) throw 0; data=await r.json(); render(); }
+  catch(e){ if(!data){ $("list").innerHTML='<div class="empty"><b>Radar ainda sem dados</b>A primeira coleta do radar sai em até 10 minutos.</div>'; } }
+}
+async function loadLive(){
+  try{ const r=await fetch(LIVE,{cache:"no-store"}); if(!r.ok) throw 0; live=await r.json(); checkLive(); render(); }catch(e){}
+}
+async function loadDeaths(){
+  try{ const r=await fetch(LIVE_D,{cache:"no-store"}); if(!r.ok) throw 0; const j=await r.json(); if(j.deaths){ liveD=j.deaths; checkDeaths(); render(); } }catch(e){}
+}
+/* ---------- alertas: apita quando um hunted loga, começa a caçar, upa ou morre ---------- */
+let alOn=false, alPrefs={login:true,hunt:true,level:true,death:true}, actx=null, prevLive=null, seenD=null, huntAt={}, alLog=[];
+try{const p=JSON.parse(localStorage.getItem("pg-alerts")||"null"); if(p){alOn=!!p.on; Object.assign(alPrefs,p.prefs||{});}}catch(e){}
+function alSave(){try{localStorage.setItem("pg-alerts",JSON.stringify({on:alOn,prefs:alPrefs}))}catch(e){}}
+function huntedNames(){ return data?data.chars.filter(c=>!c.missing&&!c.error).map(c=>c.name):[]; }
+function unlock(){ try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); if(actx.state==="suspended") actx.resume().then(alUI); }catch(e){} alUI(); }
+function beep(kind){
+  if(!actx||actx.state!=="running") return;
+  const seq={login:[660,880],hunt:[520,0,520],level:[523,659,784,1047],death:[440,330,220]}[kind]||[600];
+  let t=actx.currentTime+0.02;
+  for(const f of seq){ if(f){const o=actx.createOscillator(),g=actx.createGain(); o.type="square"; o.frequency.value=f; g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.15,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+0.16); o.connect(g).connect(actx.destination); o.start(t); o.stop(t+0.18);} t+=0.19; }
+}
+function fire(kind,name,text){
+  if(!alOn||!alPrefs[kind]) return;
+  alLog.unshift({t:Date.now(),kind,name,text}); alLog=alLog.slice(0,8); drawLog();
+  beep(kind);
+  try{ if("Notification" in window&&Notification.permission==="granted") new Notification(name+" "+text,{body:"Radar de hunteds · Olden 74",tag:kind+"|"+name}); }catch(e){}
+}
+function drawLog(){ const ul=$("al-log"); ul.replaceChildren(); for(const a of alLog){const li=el("li","al-"+a.kind); li.append(el("time",null,hhmm(a.t)), el("b",null,a.name), document.createTextNode(" "+a.text)); ul.append(li);} ul.hidden=!alLog.length; }
+function alUI(){
+  const b=$("al-btn"); b.textContent=alOn?"Desligar alertas":"Ligar alertas"; b.classList.toggle("al-active",alOn);
+  const perm=("Notification" in window)?Notification.permission:"x", som=actx&&actx.state==="running";
+  $("al-status").textContent=!alOn?" · desligados":" · ligados"+(som?" com som":" (clique em qualquer lugar da página para liberar o som)")+(perm==="granted"?" e notificação":"")+". Deixe esta página aberta.";
+  document.querySelectorAll("#al-opts input").forEach(i=>i.checked=!!alPrefs[i.dataset.k]);
+}
+function checkLive(){
+  if(!live||!live.chars||!data) return;
+  if(prevLive&&live.updated===prevLive.updated) return;
+  const fresh=!!(live.onlineAt&&Date.now()-live.onlineAt<5*60000), onNow=new Set((live.online||[]).map(n=>n.toLowerCase()));
+  for(const n of huntedNames()){
+    const k=n.toLowerCase(), A=live.chars[n], B=prevLive&&prevLive.chars[n];
+    if(prevLive){
+      if(fresh&&prevLive.fresh&&onNow.has(k)&&!prevLive.on.has(k)) fire("login",n,"logou");
+      if(A&&B&&A.lvl>B.lvl) fire("level",n,"upou para o level "+A.lvl);
+      if(A&&A.g1>0&&(!huntAt[n]||Date.now()-huntAt[n]>10*60000)) fire("hunt",n,"está caçando (+"+fmt(A.g1)+" XP no último minuto)");
+    }
+    if(A&&A.g1>0) huntAt[n]=Date.now();
+  }
+  prevLive={updated:live.updated,chars:live.chars,on:onNow,fresh};
+}
+function checkDeaths(){
+  if(!liveD) return;
+  const names=new Set(huntedNames().map(n=>n.toLowerCase()));
+  if(seenD) for(const d of liveD){ if(!seenD.has(d.t+"|"+d.name)&&names.has(d.name.toLowerCase())&&Date.now()-d.t<30*60000) fire("death",d.name,"morreu no level "+d.lvl+" para "+d.by+(d.md&&d.md!==d.by?" e "+d.md:"")); }
+  seenD=new Set(liveD.map(d=>d.t+"|"+d.name));
+}
+$("al-btn").addEventListener("click",async()=>{ alOn=!alOn; if(alOn){ unlock(); try{ if("Notification" in window&&Notification.permission==="default") await Notification.requestPermission(); }catch(e){} setTimeout(()=>beep("login"),150); } alSave(); alUI(); });
+$("al-opts").addEventListener("change",e=>{const k=e.target.dataset&&e.target.dataset.k; if(!k) return; alPrefs[k]=e.target.checked; alSave();});
+$("al-test").addEventListener("click",()=>{ unlock(); setTimeout(()=>beep("level"),150); });
+document.addEventListener("pointerdown",()=>{ if(alOn) unlock(); },{once:true});
+alUI();
+load(); loadLive(); loadDeaths(); setInterval(load,120000); setInterval(loadLive,30000); setInterval(loadDeaths,30000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden){load();loadLive();}});
+</script>
+</body>
+</html>

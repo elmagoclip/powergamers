@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Powergamers Olden 74 · El Mago</title>
+<meta name="description" content="Quem mais fez XP no Olden 74 nos últimos 10 min, 30 min e nas últimas horas. Por twitch.tv/elmago21.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: placar em uma coluna — topo com abas de janela, faixa de resumo, tabela ranqueada */
+:root{
+  --bg:#f3f1ec; --panel:#ffffff; --fg:#1d1a16; --muted:#6f685d; --line:#e2ddd2;
+  --accent:#b8860b; --accent-ink:#ffffff; --gold:#c9a227; --silver:#9aa3ad; --bronze:#b5733f;
+  --good:#2f7d4a; --me:#fff4cf; --twitch:#9146ff;
+  --display:"Space Grotesk",system-ui,sans-serif; --body:"Inter",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#14120f; --panel:#1d1a16; --fg:#efe9dd; --muted:#a39a8a; --line:#2f2a23;
+  --accent:#e0b23a; --accent-ink:#1a1408; --good:#6cc48a; --me:#3a3014; color-scheme:dark}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45}
+.wrap{max-width:920px;margin:0 auto;padding-block:28px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:20px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--display);font-size:clamp(28px,5vw,40px);line-height:1.05;margin:4px 0 0;text-wrap:balance}
+.by{display:inline-flex;align-items:center;gap:6px;margin-top:8px;font-size:13px;font-weight:600;color:#fff;background:var(--twitch);padding:4px 10px;border-radius:999px;text-decoration:none}
+.by:hover{filter:brightness(1.1)}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:4px}
+.tabs button{font:600 14px var(--body);border:0;background:transparent;color:var(--fg);padding:7px 11px;border-radius:7px;cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.tabs button:disabled{opacity:.35;cursor:not-allowed}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.stat .k{font-size:12px;color:var(--muted)}
+.stat .v{font-family:var(--mono);font-weight:700;font-size:20px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.stat .s{font-size:12px;color:var(--muted)}
+.tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+input[type=search]{font:15px var(--body);color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 12px;width:min(320px,100%)}
+.note{font-size:13px;color:var(--muted)}
+.tablebox{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;min-width:560px}
+th{font:600 12px var(--body);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:left;padding:10px 12px;border-bottom:1px solid var(--line)}
+td{padding:9px 12px;border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:0}
+.num{text-align:right;font-family:var(--mono)}
+.pos{font-family:var(--mono);font-weight:700;width:44px}
+.medal{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;color:#1d1a16;font-size:13px}
+.m1{background:var(--gold)}.m2{background:var(--silver)}.m3{background:var(--bronze)}
+td a{color:var(--fg);font-weight:600;text-decoration:none}
+td a:hover{text-decoration:underline}
+.voc{color:var(--muted);font-size:13px}
+.up{color:var(--good);font-family:var(--mono);font-size:12px;margin-left:6px}
+.gain{font-weight:700;color:var(--good)}
+tr.me td{background:var(--me)}
+.empty{padding:40px 20px;text-align:center;color:var(--muted)}
+.empty b{color:var(--fg);display:block;font-family:var(--display);font-size:20px;margin-bottom:6px}
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-width:0}
+.sort{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:3px}
+.sort button{font:600 13px var(--body);border:0;background:transparent;color:var(--fg);padding:6px 10px;border-radius:6px;cursor:pointer}
+.sort button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--good);margin-left:7px;vertical-align:middle}
+.onlyon{font:600 13px var(--body);display:inline-flex;align-items:center;gap:6px;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer}
+nav{display:flex;flex-wrap:wrap;gap:8px}
+nav a{font-weight:600;font-size:14px;color:var(--fg);text-decoration:none;padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:var(--panel)}
+nav a[aria-current="page"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+footer{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:6px}
+footer a{color:var(--muted)}
+@media (prefers-reduced-motion:no-preference){.tabs button{transition:background .15s}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav aria-label="Páginas"><a href="./" aria-current="page">Quem mais fez XP</a><a href="radar.html">Radar de hunteds</a><a href="online.html">Quem está online</a><a href="mortes.html">Últimas mortes</a><a href="exiva.html">Mapa do exiva</a></nav>
+  <header>
+    <div>
+      <div class="eyebrow">Olden 74 · 7.4 · 1x PvP</div>
+      <h1>Quem mais fez XP</h1>
+      <a class="by" href="https://www.twitch.tv/elmago21" target="_blank" rel="noopener">twitch.tv/elmago21</a>
+    </div>
+    <div class="tabs" role="group" aria-label="Janela de tempo" id="tabs">
+      <button data-m="5">5min</button><button data-m="10">10min</button><button data-m="30">30min</button><button data-m="60">1h</button><button data-m="180">3h</button><button data-m="360">6h</button><button data-m="720">12h</button><button data-m="1440">24h</button>
+    </div>
+  </header>
+
+  <section class="strip">
+    <div class="stat"><div class="k">Top 1 da janela</div><div class="v" id="s-top">—</div><div class="s" id="s-top2">&nbsp;</div></div>
+    <div class="stat"><div class="k">Chars que ganharam XP</div><div class="v" id="s-active">—</div><div class="s">&nbsp;</div></div>
+    <div class="stat"><div class="k">XP somado no server</div><div class="v" id="s-sum">—</div><div class="s">&nbsp;</div></div>
+    <div class="stat"><div class="k">Última coleta</div><div class="v" id="s-upd">—</div><div class="s" id="s-span">&nbsp;</div></div>
+  </section>
+
+  <div class="tools">
+    <div class="filters">
+      <input type="search" id="q" placeholder="Buscar personagem…" aria-label="Buscar personagem" autocomplete="off">
+      <label class="onlyon"><input type="checkbox" id="onlyon"> Só online <span class="dot" aria-hidden="true"></span></label>
+      <div class="sort" role="group" aria-label="Ordenar">
+        <button type="button" data-o="desc" aria-pressed="true">Mais XP</button><button type="button" data-o="asc" aria-pressed="false">Menos XP</button>
+      </div>
+    </div>
+    <span class="note" id="note"></span>
+  </div>
+
+  <div class="tablebox">
+    <table>
+      <thead><tr><th>#</th><th>Personagem</th><th>Vocação</th><th class="num">Nível</th><th class="num">XP ganho</th><th class="num">XP/hora</th></tr></thead>
+      <tbody id="rows"><tr><td colspan="6"><div class="empty"><b>Carregando o ranking…</b>Buscando a última coleta.</div></td></tr></tbody>
+    </table>
+  </div>
+  <footer>
+    <span>Dados de todas as páginas do ranking de experiência do olden74.com (todos os chars com XP), coletados a cada ~10 min (1 e 5 min: medidos minuto a minuto). O XP ganho é a diferença entre a coleta mais recente e a coleta mais próxima do início da janela; quem morre perde XP e pode sumir da lista. A página se atualiza sozinha.</span>
+    <span>Feito para a live do <a href="https://www.twitch.tv/elmago21" target="_blank" rel="noopener">El Mago</a>. Site não oficial, sem ligação com a equipe do Olden 74.</span>
+  </footer>
+</div>
+<script>
+const VOC={0:"Sem vocação",1:"Sorcerer",2:"Druid",3:"Paladin",4:"Knight",5:"Master Sorcerer",6:"Elder Druid",7:"Royal Paladin",8:"Elite Knight"};
+const ME="El Mago Obrabo";
+const $=id=>document.getElementById(id);
+const fmt=n=>n.toLocaleString("pt-BR");
+const hhmm=t=>new Date(t).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+const label=m=>m<60?`${m} min`:`${m/60}h`;
+const LIVE="https://quiet-sea-5869.saviocardoso76-79e.workers.dev/todos?m=";
+let data=null, win=60, query="", order="desc", onlineSet=null, onlyOn=false;
+const ONLINE_URL="https://quiet-sea-5869.saviocardoso76-79e.workers.dev/online";
+const live={};
+try{const m=+localStorage.getItem("pg-m"); if(m) win=m; if(win<5) win=5;}catch(e){}
+
+function setTabs(){
+  document.querySelectorAll("#tabs button").forEach(b=>{
+    const m=+b.dataset.m; b.setAttribute("aria-pressed",m===win?"true":"false");
+    b.disabled=m>=10&&!!data&&!data.windows[m];
+    b.title=b.disabled?"Ainda juntando dados para essa janela":"";
+  });
+}
+$("tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(!b||b.disabled)return;win=+b.dataset.m;try{localStorage.setItem("pg-m",win)}catch(e){};setTabs();render();});
+$("q").addEventListener("input",e=>{query=e.target.value.trim().toLowerCase();render();});
+$("onlyon").addEventListener("change",e=>{onlyOn=e.target.checked;render();});
+document.querySelector(".sort").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;order=b.dataset.o;document.querySelectorAll(".sort button").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));render();});
+function empty(t,s){$("rows").innerHTML='<tr><td colspan="6"><div class="empty"><b></b><span></span></div></td></tr>';$("rows").querySelector("b").textContent=t;$("rows").querySelector("span").textContent=s;}
+
+function render(){
+  if(win<10){ if(!live[win]){ empty("Carregando o minuto a minuto…","Buscando quem ganhou XP agora."); return; } }
+  else if(!data) return;
+  $("s-upd").textContent=hhmm(win<10?live[win].to:data.updated);
+  const W=win<10?live[win]:data.windows[win];
+  if(!W){
+    const avail=data?Object.keys(data.windows).map(Number):[];
+    for(const k of["s-top","s-active","s-sum"])$(k).textContent="—"; $("s-top2").innerHTML="&nbsp;"; $("s-span").innerHTML="&nbsp;";
+    $("note").textContent="";
+    empty("Ainda juntando dados",`O site começou a coletar há pouco. A janela de ${label(win)} aparece quando houver coletas suficientes.`+(avail.length?"":" A primeira comparação sai depois da segunda coleta."));
+    return;
+  }
+  $("s-span").textContent=`${hhmm(W.from)} → ${hhmm(W.to)}`;
+  $("s-active").textContent=fmt(W.active); $("s-sum").textContent=fmt(W.sum);
+  const top=W.rows.reduce((m,r)=>!m||r[4]>m[4]?r:m,null); $("s-top").textContent=top?top[0]:"—"; $("s-top2").textContent=top?"+"+fmt(top[4])+" XP":" ";
+  $("note").textContent=W.span<win*0.85?`Ainda não há ${label(win)} de dados: comparando os últimos ${Math.round(W.span)} min.`:`Comparando ${hhmm(W.from)} com ${hhmm(W.to)} (${Math.round(W.span)} min).`;
+  let all=W.rows.map(r=>({name:r[0],voc:r[1],lvl:r[2],dl:r[3],gain:r[4]}));
+  all.sort((a,b)=>order==="asc"?a.gain-b.gain:b.gain-a.gain); all.forEach((r,i)=>r.pos=i+1);
+  const isOn=n=>onlineSet?onlineSet.has(n.toLowerCase()):false;
+  const rows=all.filter(r=>(!query||r.name.toLowerCase().includes(query))&&(!onlyOn||isOn(r.name)));
+  if(!rows.length){empty(query?"Nenhum personagem encontrado":"Ninguém ganhou XP nessa janela",query?"Ninguém com esse nome está entre os que mais ganharam XP nessa janela.":"Tente uma janela maior.");return;}
+  const tb=document.createElement("tbody"); tb.id="rows";
+  for(const r of rows.slice(0,query?150:100)){
+    const tr=document.createElement("tr"); if(r.name===ME) tr.className="me";
+    const pos=(order==="desc"&&r.pos<=3)?`<span class="medal m${r.pos}">${r.pos}</span>`:r.pos;
+    tr.innerHTML=`<td class="pos">${pos}</td><td><a target="_blank" rel="noopener"></a></td><td class="voc"></td><td class="num">${r.lvl}${r.dl>0?`<span class="up">+${r.dl}</span>`:""}</td><td class="num gain">+${fmt(r.gain)}</td><td class="num">${fmt(Math.round(r.gain/(W.span/60)))}</td>`;
+    const a=tr.querySelector("a"); a.textContent=r.name;
+    if(onlineSet&&onlineSet.has(r.name.toLowerCase())){ const d=document.createElement("span"); d.className="dot"; d.title="Online agora"; a.after(d); } a.href="https://olden74.com/personagens/"+encodeURIComponent(r.name);
+    tr.querySelector(".voc").textContent=VOC[r.voc]||"";
+    tb.appendChild(tr);
+  }
+  $("rows").replaceWith(tb);
+}
+async function load(){
+  try{
+    const r=await fetch("rank.json?t="+Date.now(),{cache:"no-store"});
+    if(!r.ok) throw new Error(r.status);
+    data=await r.json(); setTabs(); render();
+  }catch(e){ if(!data) empty("Ainda sem coletas","A primeira coleta ainda não terminou. Volte em alguns minutos."); }
+}
+async function loadOnline(){
+  try{ const r=await fetch(ONLINE_URL,{cache:"no-store"}); if(!r.ok) throw 0; const j=await r.json(); onlineSet=new Set((j.names||[]).map(n=>n.toLowerCase())); render(); }catch(e){}
+}
+async function loadLive(){
+  for(const m of [1,5]){
+    if(m!==win && live[m]) continue;
+    try{
+      const r=await fetch(LIVE+m,{cache:"no-store"}); if(!r.ok) throw 0; const j=await r.json();
+      live[m]=j.from?{from:j.from,to:j.updated,span:j.span/60,active:j.active,sum:j.sum,rows:j.rows}:null;
+      if(!live[m]&&j.updated) live[m]=null;
+    }catch(e){}
+  }
+  if(win<10){
+    if(live[win]===null||live[win]===undefined) empty("Ainda juntando dados","O minuto a minuto começou agora. Em até 2 minutos aparece quem ganhou XP.");
+    else render();
+  }
+}
+setTabs(); load(); loadLive(); loadOnline(); setInterval(load,120000); setInterval(loadLive,30000); setInterval(loadOnline,60000);
+$("tabs").addEventListener("click",()=>{ if(win<10) loadLive(); });
+document.addEventListener("visibilitychange",()=>{if(!document.hidden){load();loadLive();}});
+</script>
+</body>
+</html>
